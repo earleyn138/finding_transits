@@ -126,13 +126,16 @@ def find_trns_points(soln):
 
 
 y_values = [lk3.flux]
+x_values = [lk3.time]
+yerr_values = [fixed_normerror]
 planet_models = []
 planet_solns = []
 planet_results = []
 planet_outmasks = []
 
 for i in range(10):
-    results = transits.FindTransits(x, y_values[i], yerr)
+    mask_out = None
+    results = transits.FindTransits(x_values[i], y_values[i], yerr_values[i])
 
     GPmodel, map_soln0 = results.build_GPmodel()
     # # Plotting light curves with GP model, transits, residuals before removing outliers
@@ -175,14 +178,16 @@ for i in range(10):
 
     if deltaloglike > 0.5 * K * np.log(N):
         # This is a planet
-        results.plot_lc(soln=map_soln, mask = mask_out)
+        # results.plot_lc(soln=map_soln, mask = mask_out)
         planet_models.append(GPmodel)
         planet_solns.append(map_soln)
         planet_results.append(results)
         planet_outmasks.append(mask_out)
 
         # Removing this transit to look for another
-        y_values.append(y_values[i] - np.sum(map_soln0["light_curves"], axis=-1))
+        y_values.append(y_values[i][mask_out] - np.sum(map_soln["light_curves"], axis=-1))
+        x_values.append(x_values[i][mask_out])
+        yerr_values.append(yerr_values[i][mask_out])
 
     else:
         # There are no more planets in the data
