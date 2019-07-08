@@ -84,8 +84,8 @@ inject1 = inject_transit(lk, true_t0, true_RpRs, true_per)
 lk2 = LC(inject1.time, inject1.flux)
 
 # Second injection
-true_t0 = 1340
-true_RpRs = 0.05
+true_t0 = 1320
+true_RpRs = 0.12
 true_per = 2.9
 inject2 = inject_transit(lk2, true_t0, true_RpRs, true_per)
 
