@@ -84,8 +84,8 @@ inject1 = inject_transit(lk, true_t0, true_RpRs, true_per)
 lk2 = LC(inject1.time, inject1.flux)
 
 # Second injection
-true_t0 = 1320
-true_RpRs = 0.12
+true_t0 = 1330
+true_RpRs = 0.09
 true_per = 2.9
 inject2 = inject_transit(lk2, true_t0, true_RpRs, true_per)
 
@@ -116,8 +116,11 @@ def find_trns_points(soln):
         if flux != 0 and model_lc[i-1] == 0:
             n = 0
             for j in range(30):
-                if model_lc[i+j] != 0:
-                    n += 1
+                if i+j < len(model_lc):
+                    if model_lc[i+j] != 0:
+                        n += 1
+                else:
+                    break
             points.append(n)
 
     num_trns_points = np.mean(points)
@@ -128,13 +131,13 @@ def find_trns_points(soln):
 y_values = [lk3.flux]
 x_values = [lk3.time]
 yerr_values = [fixed_normerror]
+deltaloglike_values = []
+
 planet_models = []
 planet_solns = []
 planet_results = []
 planet_outmasks = []
-
 for i in range(10):
-    mask_out = None
     results = transits.FindTransits(x_values[i], y_values[i], yerr_values[i])
 
     GPmodel, map_soln0 = results.build_GPmodel()
@@ -169,6 +172,7 @@ for i in range(10):
     logp = map_soln['loglikelihood']
     logp0 = no_pl_map_soln['loglikelihood']
     deltaloglike = logp - logp0
+    deltaloglike_values.append(deltaloglike)
 
     # Number of parameters for light curve model
     K = 6
