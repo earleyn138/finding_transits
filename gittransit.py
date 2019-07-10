@@ -9,26 +9,26 @@ import requests
 from lightkurve.lightcurve import LightCurve as LC
 import pysyzygy as ps
 
-import transits
+from transits import FindTransits
 
+#
+# path = requests.get("https://archipelago.uchicago.edu/tess_postcards/young_bois/").text
+# soup = BeautifulSoup(path, "lxml").find_all('a')
+#
+# all_url = []
+# for fn in soup:
+#     if fn.get('href')[-4::] == 'fits':
+#         all_url.append(fn.get('href'))
+#
+# url_list = all_url[79:80]
+ffi_dir = '/Users/nicholasearley/TESS_data/ffi/case2'
+# url_path = 'https://archipelago.uchicago.edu/tess_postcards/young_bois/'
+#
+# for url in url_list:
+#     os.system('cd {} && curl -O -L {}'.format(ffi_dir, url_path+url))
 
-path = requests.get("https://archipelago.uchicago.edu/tess_postcards/young_bois/").text
-soup = BeautifulSoup(path, "lxml").find_all('a')
-
-all_url = []
-for fn in soup:
-    if fn.get('href')[-4::] == 'fits':
-        all_url.append(fn.get('href'))
-
-url_list = all_url[32:33]
-ffi_dir = '/Users/nicholasearley/TESS_data/detrending'
-url_path = 'https://archipelago.uchicago.edu/tess_postcards/young_bois/'
-
-for url in url_list:
-    os.system('cd {} && curl -O -L {}'.format(ffi_dir, url_path+url))
-
-file = 'hlsp_eleanor_tess_ffi_tic52284854_s01_tess_v0.1.8rc1_lc.fits'
-star = eleanor.Source(fn=file, sector=1, fn_dir=ffi_dir)
+file = 'hlsp_eleanor_tess_ffi_tic33736757_s02_tess_v0.1.8rc1_lc.fits'
+star = eleanor.Source(fn=file, sector=2, fn_dir=ffi_dir)
 data = eleanor.TargetData(star, do_psf=True, do_pca=True)
 q = data.quality == 0
 raw_flux = data.corr_flux[q]
@@ -77,19 +77,27 @@ def inject_transit(lk, t0, RpRs, per, exp=0.02):
 
 lk = LC(fixed_time, fixed_normflux)
 true_t0 = 1320
-true_RpRs = 0.12
-true_per = 3.81
+true_RpRs = 0.11
+true_per = 2.4
 inject1 = inject_transit(lk, true_t0, true_RpRs, true_per)
 
 lk2 = LC(inject1.time, inject1.flux)
 
 # Second injection
-true_t0 = 1330
-true_RpRs = 0.09
-true_per = 2.9
+true_t0 = 1340
+true_RpRs = 0.08
+true_per = 3.12
 inject2 = inject_transit(lk2, true_t0, true_RpRs, true_per)
 
 lk3 = LC(inject2.time, inject2.flux)
+#
+# # Third injection
+# true_t0 = 1330
+# true_RpRs = 0.12
+# true_per = 1.9
+# inject3 = inject_transit(lk3, true_t0, true_RpRs, true_per)
+#
+# lk4 = LC(inject3.time, inject3.flux)
 
 x = lk3.time
 y = lk3.flux
@@ -138,7 +146,7 @@ planet_solns = []
 planet_results = []
 planet_outmasks = []
 for i in range(10):
-    results = transits.FindTransits(x_values[i], y_values[i], yerr_values[i])
+    results = FindTransits(x_values[i], y_values[i], yerr_values[i])
 
     GPmodel, map_soln0 = results.build_GPmodel()
     # # Plotting light curves with GP model, transits, residuals before removing outliers

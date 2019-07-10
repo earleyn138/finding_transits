@@ -29,7 +29,7 @@ class FindTransits(object):
         self.do_bls()
         # self.make_bls_periodogram()
         # self.plot_box()
-        self.mask_transits()
+        # self.mask_transits()
         self.find_rotper()
 	    # self.build_GPmodel()
 	    # self.plot_light_curves()
@@ -40,9 +40,9 @@ class FindTransits(object):
         '''GP model of stellar variability
         '''
         self.flatten_lc, self.trend_lc = flatten(self.time, self.flux, method='gp', kernel='periodic_auto', kernel_size=5, return_trend=True)
-        plt.scatter(self.time, self.flux, s=1, color='black')
-        plt.plot(self.time, self.trend_lc, color='green', linewidth=1, label='gp')
-        plt.show()
+        # plt.scatter(self.time, self.flux, s=1, color='black')
+        # plt.plot(self.time, self.trend_lc, color='green', linewidth=1, label='gp')
+        # plt.show()
 
         self.wotflux = self.flux - self.trend_lc
 
@@ -153,13 +153,13 @@ class FindTransits(object):
 
         peak = results['peaks'][0]
         freq, power = results['periodogram']
-        plt.plot(-np.log10(freq), power, "k")
-        plt.axvline(np.log10(peak["period"]), color="k", lw=4, alpha=0.3)
-        plt.xlim((-np.log10(freq)).min(), (-np.log10(freq)).max())
-        plt.yticks([])
-        plt.xlabel("log10(period)")
-        plt.ylabel("power")
-        plt.show()
+        # plt.plot(-np.log10(freq), power, "k")
+        # plt.axvline(np.log10(peak["period"]), color="k", lw=4, alpha=0.3)
+        # plt.xlim((-np.log10(freq)).min(), (-np.log10(freq)).max())
+        # plt.yticks([])
+        # plt.xlabel("log10(period)")
+        # plt.ylabel("power")
+        # plt.show()
 
         self.peak_rotper = peak["period"]
 
