@@ -133,7 +133,8 @@ for i in range(10):
     no_pl_solns.append(no_pl_map_soln)
 
 
-    # Number of parameters for light curve model: impact parameter,
+    # Number of parameters for light curve model: impact parameter, period,
+    # limb darkening (2 parameters), t0, radius, eccentricity
     K = 7
 
     # Total number of data points in transit
