@@ -70,19 +70,19 @@ def tot_trns_points(soln):
     for flux in model_lc:
         if flux != 0:
             points += 1
-
     return points
 
 
 x_values = [x]
 y_values = [y]
 yerr_values = [norm_error]
-deltaloglike_values = []
 
+deltaloglike_values = []
+planet_results = []
 planet_models = []
 planet_solns = []
-planet_results = []
 planet_outmasks = []
+
 no_pl_models = []
 no_pl_solns = []
 
@@ -123,17 +123,20 @@ for i in range(10):
     deltaloglike = logp - logp0
     deltaloglike_values.append(deltaloglike)
 
+    planet_results.append(results)
     planet_models.append(GPmodel)
     planet_solns.append(map_soln)
-    planet_results.append(results)
     planet_outmasks.append(mask_out)
-    # results.plot_lc(soln=map_soln, mask = mask_out)
+    #####results.plot_lc(soln=map_soln, mask = mask_out)
+
+    no_pl_models.append(no_pl_GPmodel)
+    no_pl_solns.append(no_pl_map_soln)
 
 
     # Number of parameters for light curve model: impact parameter,
     K = 7
 
-    # Avg number of data points in transit
+    # Total number of data points in transit
     N = tot_trns_points(map_soln)
 
     if deltaloglike > 0.5 * K * np.log(N):
