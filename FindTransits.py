@@ -40,11 +40,13 @@ class FindTransits(object):
         '''GP model of stellar variability
         '''
         self.flatten_lc, self.trend_lc = flatten(self.time, self.flux, method='gp', kernel='periodic_auto', kernel_size=5, return_trend=True)
-        # plt.scatter(self.time, self.flux, s=1, color='black')
-        # plt.plot(self.time, self.trend_lc, color='green', linewidth=1, label='gp')
-        # plt.show()
+        #self.flatten_lc, self.trend_lc = flatten(self.time, self.flux, method='pspline', window_length=0.1, break_tolerance=1, return_trend=True)
 
-        self.wotflux = self.flux - self.trend_lc
+        plt.scatter(self.time, self.flux, s=1, color='black')
+        plt.plot(self.time, self.trend_lc, color='green', linewidth=1, label='gp')
+        plt.show()
+
+        self.wotflux = self.flux/self.trend_lc - 1
 
     def do_bls(self):
         """
