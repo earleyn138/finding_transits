@@ -25,22 +25,38 @@ class FindTransits(object):
         self.flux = flux
         self.flux_err = flux_err
 
-        self.wotan_clan()
+        self.find_rotper()
+        #self.wotan_clan()
         self.do_bls()
         # self.make_bls_periodogram()
         # self.plot_box()
         # self.mask_transits()
-        self.find_rotper()
 	    # self.build_GPmodel()
 	    # self.plot_light_curves()
         # self.plot_GPmodel()
 
+    def find_rotper(self):
+        '''
+        '''
+        results = xo.estimators.lomb_scargle_estimator(self.time, self.flux, max_peaks=1, min_period=0.1, max_period=30, samples_per_peak=50)
+
+        peak = results['peaks'][0]
+        freq, power = results['periodogram']
+        # plt.plot(-np.log10(freq), power, "k")
+        # plt.axvline(np.log10(peak["period"]), color="k", lw=4, alpha=0.3)
+        # plt.xlim((-np.log10(freq)).min(), (-np.log10(freq)).max())
+        # plt.yticks([])
+        # plt.xlabel("log10(period)")
+        # plt.ylabel("power")
+        # plt.show()
+
+        self.peak_rotper = peak["period"]
 
     def wotan_clan(self):
         '''GP model of stellar variability
         '''
-        # self.flatten_lc, self.trend_lc = flatten(self.time, self.flux, method='gp', kernel='periodic_auto', kernel_size=5, return_trend=True)
-        self.flatten_lc, self.trend_lc = flatten(self.time, self.flux, method='pspline', window_length=0.1, break_tolerance=1, return_trend=True)
+        #self.flatten_lc, self.trend_lc = flatten(self.time, self.flux, method='gp', kernel='periodic_auto', kernel_size=5, return_trend=True, robust=True)
+        self.flatten_lc, self.trend_lc = flatten(self.time, self.flux, method='rspline', window_length=0.1, break_tolerance=1, return_trend=True)
 
         plt.scatter(self.time, self.flux, s=1, color='black')
         plt.plot(self.time, self.trend_lc, color='green', linewidth=1, label='gp')
@@ -51,6 +67,7 @@ class FindTransits(object):
     def do_bls(self):
         """
         """
+        self.wotflux = self.flux
         durations = np.linspace(0.05, 0.2, 10)
         bls_model = BLS(self.time, self.wotflux)
         bls_results = bls_model.autopower(durations, frequency_factor=5.0)
@@ -99,6 +116,7 @@ class FindTransits(object):
         fig, axes = plt.subplots(2, 1, figsize=(6, 6))
         fig.subplots_adjust(hspace=0.3)
 
+        self.wotflux = self.flux
         # Plot the light curve and best-fit model
         ax = axes[0]
         ax.plot(self.time, self.wotflux, ".k", ms=3)
@@ -147,23 +165,6 @@ class FindTransits(object):
 
         self.mask_trns = mask_trns
 
-
-    def find_rotper(self):
-        '''
-        '''
-        results = xo.estimators.lomb_scargle_estimator(self.time, self.flux, max_peaks=1, min_period=0.1, max_period=30, samples_per_peak=50)
-
-        peak = results['peaks'][0]
-        freq, power = results['periodogram']
-        # plt.plot(-np.log10(freq), power, "k")
-        # plt.axvline(np.log10(peak["period"]), color="k", lw=4, alpha=0.3)
-        # plt.xlim((-np.log10(freq)).min(), (-np.log10(freq)).max())
-        # plt.yticks([])
-        # plt.xlabel("log10(period)")
-        # plt.ylabel("power")
-        # plt.show()
-
-        self.peak_rotper = peak["period"]
 
 
     def build_GPmodel(self, mask=None, start=None):

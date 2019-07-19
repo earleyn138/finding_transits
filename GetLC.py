@@ -58,22 +58,23 @@ class GetLC(object):
     def find_breaks(self, time=None):
         """Finds gaps due to data downlink or other telescope issues.
         """
+        print(len(time))
         if time is None:
             time = self.time
         diff = np.diff(time)
         ind  = np.where((diff >= 2.5*np.std(diff)+np.nanmean(diff)))[0]
+        ind = np.append(0, ind)
+        ind = np.append(ind, len(time))
+        print(ind)
 
         subsets = []
-        for i in range(len(ind)):
-            if i == 0:
-                region = np.arange(0, ind[i]+1, 1)
-            elif i > 0 and i < (len(ind)-1):
-                region = np.arange(ind[i], ind[i+1]+1, 1)
+        for i in range(len(ind)-1):
+            region = np.arange(ind[i], ind[i+1], 1)
+            print(len(region))
             subsets.append(region)
-        region = np.arange(ind[-1], len(time), 1)
-        subsets.append(region)
 
         return np.array(subsets)
+
 
 
     def normalize_lc(self):
@@ -81,19 +82,20 @@ class GetLC(object):
         """
         def normalized_subset(regions, t, flux, err, cads):
             time, norm_flux = np.array([]), np.array([])
-            error, cadences = np.array([]), np.array([])
+            norm_flux_err, cadences = np.array([]), np.array([])
 
             for reg in regions:
-                f = flux[reg]
-                norm_flux = np.append(f/np.nanmedian(f), norm_flux)
-                time      = np.append(t[reg], time)
-                error     = np.append(err[reg], error)
-                cadences  = np.append(cads[reg], cadences)
-            return time, norm_flux, error, cadences
+                f          = flux[reg]
+                norm_flux  = np.append(f/np.nanmedian(f), norm_flux)
+                time       = np.append(t[reg], time)
+                e          = err[reg]
+                norm_flux_err = np.append(e/np.nanmedian(f), norm_flux_err)
+                cadences   = np.append(cads[reg], cadences)
+            return time, norm_flux, norm_flux_err, cadences
 
 
         self.time, self.norm_flux = np.array([]), np.array([])
-        self.flux_err = np.array([])
+        self.norm_flux_err = np.array([])
         self.cadences = np.array([])
 
         if self.multi is True:
@@ -108,20 +110,22 @@ class GetLC(object):
                 sector_t, sector_f, sector_e, sector_c = normalized_subset(regions, t, f, err, d.ffiindex[q])
                 self.time = np.append(sector_t, self.time)
                 self.norm_flux = np.append(sector_f, self.norm_flux)
-                self.flux_err  = np.append(sector_e, self.flux_err)
+                self.norm_flux_err  = np.append(sector_e, self.norm_flux_err)
                 self.cadences  = np.append(sector_c, self.cadences)
         else:
             q = self.data.quality == 0
             regions = self.find_breaks(time=self.data.time[q])
+            self.regions = regions+0.0
             sector_t, sector_f, sector_e, sector_c = normalized_subset(regions, self.data.time[q],
                                                                        self.data.corr_flux[q],
                                                                        self.data.flux_err[q],
                                                                        self.data.ffiindex[q])
             self.time = sector_t
+            print(sector_c)
             self.norm_flux = sector_f
-            self.flux_err  = sector_e
+            self.norm_flux_err  = sector_e
             self.cadences  = sector_c
 
-        self.time, self.norm_flux = zip(*sorted(zip(self.time, self.norm_flux)))
-        self.time, self.norm_flux = np.array(self.time), np.array(self.norm_flux)
+        self.time, self.norm_flux, self.norm_flux_err = zip(*sorted(zip(self.time, self.norm_flux, self.norm_flux_err)))
+        self.time, self.norm_flux, self.norm_flux_err = np.array(self.time), np.array(self.norm_flux), np.array(self.norm_flux_err)
         self.cadences = np.sort(self.cadences)

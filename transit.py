@@ -10,11 +10,11 @@ import pysyzygy as ps
 
 
 # Loading in light curve
-lc = transits.GetLC(fn=['hlsp_eleanor_tess_ffi_tic139398868_s05_tess_v0.2.1_lc.fits', 'hlsp_eleanor_tess_ffi_tic139398868_s06_tess_v0.2.1_lc.fits'], fn_dir='/Users/nicholasearley/TESS_data/ffi')
+lc = transits.GetLC(fn='hlsp_eleanor_tess_ffi_tic33736757_s02_tess_v0.2.1_lc.fits', fn_dir='/Users/nicholasearley/TESS_data/ffi/new_lc/viable_young_bois')
 
 time = lc.time
 norm_flux = lc.norm_flux
-norm_error = lc.flux_err
+norm_flux_err = lc.norm_flux_err
 
 # Injecting transits into light curve
 def inject_transit(lk, t0, RpRs, per, exp=0.02):
@@ -26,16 +26,16 @@ lk1 = LC(time, norm_flux)
 
 # First injection
 true_t0 = 1320
-true_RpRs = 0.18
-true_per = 2.4
+true_RpRs = 0.12
+true_per = 3.0
 inject1 = inject_transit(lk1, true_t0, true_RpRs, true_per)
 
 lk2 = LC(inject1.time, inject1.flux)
 
 # Second injection
 true_t0 = 1340
-true_RpRs = 0.2
-true_per = 3.12
+true_RpRs = 0.09
+true_per = 2.2
 inject2 = inject_transit(lk2, true_t0, true_RpRs, true_per)
 
 lk3 = LC(inject2.time, inject2.flux)
@@ -43,14 +43,14 @@ lk3 = LC(inject2.time, inject2.flux)
 # # Third injection
 # true_t0 = 1330
 # true_RpRs = 0.12
-# true_per = 1.9
+# true_per = 2.4
 # inject3 = inject_transit(lk3, true_t0, true_RpRs, true_per)
 #
 # lk4 = LC(inject3.time, inject3.flux)
 
 x = lk3.time
 y = lk3.flux
-yerr = norm_error
+yerr = norm_flux_err
 
 # # For when we eventualy deal with real data:
 # x = time
@@ -75,7 +75,7 @@ def tot_trns_points(soln):
 
 x_values = [x]
 y_values = [y]
-yerr_values = [norm_error]
+yerr_values = [yerr]
 
 deltaloglike_values = []
 planet_results = []
@@ -140,7 +140,7 @@ for i in range(10):
     # Total number of data points in transit
     N = tot_trns_points(map_soln)
 
-    if deltaloglike > 0.5 * K * np.log(N):
+    if np.abs(deltaloglike) > 0.5 * K * np.log(N):
         # This is a planet
         # Removing this transit to look for another
         y_values.append(y_values[i][mask_out] - np.sum(map_soln["light_curves"], axis=-1))
@@ -152,16 +152,16 @@ for i in range(10):
         break
 
 
-# Sampling model
-np.random.seed(42)
-sampler = xo.PyMC3Sampler(finish=300, chains=4)
-
-trace_list = []
-for GPmodel in planet_models:
-    with GPmodel:
-        burnin = sampler.tune(tune=500, start=map_soln, step_kwargs=dict(target_accept=0.9))
-        trace = sampler.sample(draws=2000)
-        trace_list.append(trace)
+# # Sampling model
+# np.random.seed(42)
+# sampler = xo.PyMC3Sampler(finish=300, chains=4)
+#
+# trace_list = []
+# for GPmodel in planet_models:
+#     with GPmodel:
+#         burnin = sampler.tune(tune=500, start=map_soln, step_kwargs=dict(target_accept=0.9))
+#         trace = sampler.sample(draws=2000)
+#         trace_list.append(trace)
 
 # pm.summary(trace, varnames=["logamp", "logQ0", "logdeltaQ", "mix", "logs2", "omega", "ecc", "r_pl", "b", "t0", "logP", "r_star", "m_star", "u_star", "mean", "logrotperiod"])
 #results.plot_corner(trace)
