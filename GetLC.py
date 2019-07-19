@@ -58,19 +58,16 @@ class GetLC(object):
     def find_breaks(self, time=None):
         """Finds gaps due to data downlink or other telescope issues.
         """
-        print(len(time))
         if time is None:
             time = self.time
         diff = np.diff(time)
         ind  = np.where((diff >= 2.5*np.std(diff)+np.nanmean(diff)))[0]
         ind = np.append(0, ind)
         ind = np.append(ind, len(time))
-        print(ind)
 
         subsets = []
         for i in range(len(ind)-1):
             region = np.arange(ind[i], ind[i+1], 1)
-            print(len(region))
             subsets.append(region)
 
         return np.array(subsets)
@@ -121,7 +118,6 @@ class GetLC(object):
                                                                        self.data.flux_err[q],
                                                                        self.data.ffiindex[q])
             self.time = sector_t
-            print(sector_c)
             self.norm_flux = sector_f
             self.norm_flux_err  = sector_e
             self.cadences  = sector_c

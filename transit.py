@@ -10,7 +10,7 @@ import pysyzygy as ps
 
 
 # Loading in light curve
-lc = transits.GetLC(fn='hlsp_eleanor_tess_ffi_tic33736757_s02_tess_v0.2.1_lc.fits', fn_dir='/Users/nicholasearley/TESS_data/ffi/new_lc/viable_young_bois')
+lc = transits.GetLC(fn='hlsp_eleanor_tess_ffi_tic52284854_s01_tess_v0.2.1_lc.fits', fn_dir='/Users/nicholasearley/TESS_data/ffi/new_lc/viable_young_bois')
 
 time = lc.time
 norm_flux = lc.norm_flux
@@ -34,8 +34,8 @@ lk2 = LC(inject1.time, inject1.flux)
 
 # Second injection
 true_t0 = 1340
-true_RpRs = 0.09
-true_per = 2.2
+true_RpRs = 0.05
+true_per = 1.5
 inject2 = inject_transit(lk2, true_t0, true_RpRs, true_per)
 
 lk3 = LC(inject2.time, inject2.flux)
@@ -51,6 +51,7 @@ lk3 = LC(inject2.time, inject2.flux)
 x = lk3.time
 y = lk3.flux
 yerr = norm_flux_err
+cads = lc.cadences
 
 # # For when we eventualy deal with real data:
 # x = time
@@ -76,6 +77,7 @@ def tot_trns_points(soln):
 x_values = [x]
 y_values = [y]
 yerr_values = [yerr]
+cad_values = [cads]
 
 deltaloglike_values = []
 planet_results = []
@@ -87,7 +89,7 @@ no_pl_models = []
 no_pl_solns = []
 
 for i in range(10):
-    results = transits.FindTransits(x_values[i], y_values[i], yerr_values[i])
+    results = transits.FindTransits(x_values[i], y_values[i], yerr_values[i], cad_values[i])
 
     GPmodel, map_soln0 = results.build_GPmodel()
     # # Plotting light curves with GP model, transits, residuals before removing outliers
@@ -146,6 +148,7 @@ for i in range(10):
         y_values.append(y_values[i][mask_out] - np.sum(map_soln["light_curves"], axis=-1))
         x_values.append(x_values[i][mask_out])
         yerr_values.append(yerr_values[i][mask_out])
+        cad_values.append(cad_values[i][mask_out])
 
     else:
         # There are no more planets in the data
