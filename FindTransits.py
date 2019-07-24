@@ -4,13 +4,12 @@ import astropy.units as u
 from operator import itemgetter
 
 from bls import BLS
-from lightkurve.lightcurve import LightCurve as LC
 import exoplanet as xo
-from wotan import flatten
 
 import pymc3 as pm
 import theano.tensor as tt
 import corner
+
 
 
 __all__ = ['FindTransits']
@@ -19,25 +18,21 @@ class FindTransits(object):
     '''Runs through the box-least-squares method to find transits and
     performs GP modeling'''
 
-    def __init__(self, time, flux, flux_err, cads):
-        #super(, self).__init__()
+    def __init__(self, time, flux, flux_err, cads, tic, sector, run):
 
         self.time = time
         self.flux = flux
         self.flux_err = flux_err
         self.cads = cads
+        self.tic = tic
+        self.sector = sector
+        self.run = run
 
         self.find_rotper(time, flux)
         self.make_lombscarg(time, flux)
         self.fft_lc()
-        #self.wotan_clan()
         self.do_bls()
-        # self.make_bls_periodogram()
-        # self.plot_box()
-        # self.mask_transits()
-	    # self.build_GPmodel()
-	    # self.plot_light_curves()
-        # self.plot_GPmodel()
+
 
     def find_rotper(self, time, flux):
         '''
@@ -60,19 +55,17 @@ class FindTransits(object):
         plt.yticks([])
         plt.xlabel("log10(period)")
         plt.ylabel("power")
-        plt.show()
 
-    # def wotan_clan(self):
-    #     '''GP model of stellar variability
-    #     '''
-    #     #self.flatten_lc, self.trend_lc = flatten(self.time, self.flux, method='gp', kernel='periodic_auto', kernel_size=5, return_trend=True, robust=True)
-    #     self.flatten_lc, self.trend_lc = flatten(self.time, self.flux, method='rspline', window_length=0.1, break_tolerance=1, return_trend=True)
-    #
-    #     plt.scatter(self.time, self.flux, s=1, color='black')
-    #     plt.plot(self.time, self.trend_lc, color='green', linewidth=1, label='gp')
-    #     plt.show()
-    #
-    #     self.wotflux = self.flux/self.trend_lc - 1
+        if flux is self.flux:
+            plt.label('The rotation period from Lomb-Scargle is ' +str(rotper))
+            plt.savefig('/home/earleyn/figures/raw_lombscarg_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+
+        elif flux is self.det_flux:
+            plt.savefig('/home/earleyn/figures/det_lombscarg_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+
+        plt.clf()
+
+
 
     def fft_lc(self):
 
@@ -85,52 +78,81 @@ class FindTransits(object):
 
         # Finding rotation period on raw data
         rotper, ls_results = self.find_rotper(self.time, self.flux)
-        print('The rotation period from Lomb-Scargle is ' +str(rotper))
+        #print('The rotation period from Lomb-Scargle is ' +str(rotper))
 
         self.make_lombscarg(self.time, self.flux)
 
         #Fast fourier transform
         fft_flux = np.fft.fft(even_flux)
-        freq_time = np.fft.fftfreq(even_flux.shape[-1], d=(1/48))
-        fft_time = 1/freq_time
+        freq = np.fft.fftfreq(even_flux.shape[-1], d=(1/48))
+        period = 1/freq
 
         fft_power1 = np.sqrt(fft_flux.real**2+fft_flux.imag**2)
 
         power_tup = []
-        for i, time in enumerate(fft_time):
-            if time < rotper+0.05 and time > rotper-0.05:
-                power_tup.append((i, time))
+        for i, per in enumerate(period):
+            if per < rotper+1 and per > rotper-1:
+                power_tup.append((i, per))
 
         fft_list = []
         for tup in power_tup:
             fft_list.append((fft_power1[tup[0]], tup[1]))
 
         max_power = max(fft_list,key=itemgetter(0))[0]
-        rel_time = max(fft_list,key=itemgetter(0))[1]
-        print('The rotation period after FFT is '+str(rel_time))
+        max_period = max(fft_list,key=itemgetter(0))[1]
+        #print('The rotation period after FFT is '+str(max_period))
 
-        plt.plot(fft_time, fft_power1)
-        plt.axvline(rel_time, color="r", lw=4, alpha=0.3)
-        plt.axvline(-rel_time, color="r", lw=4, alpha=0.3)
-        plt.xlim(-(rel_time+0.2),rel_time+0.2)
-        plt.show()
-        plt.close()
+        plt.plot(period, fft_power1)
+        plt.axvline(max_period, color="r", lw=4, alpha=0.3)
+        plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
+        plt.xlim(-1.1*max_period, 1.1*max_period)
+        plt.savefig('/home/earleyn/figures/fft_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+        plt.clf()
 
-        #Signal processing: notch filter
-        for i, time in enumerate(fft_time):
-            if time > rel_time-0.07 and time < rel_time+0.03:
+        #Signal processing: Top hat filter
+        #Bounds
+        pos_low_bound = 0.9*max_period
+        pos_up_bound = 1.1*max_period
+        neg_low_bound = -1.1*max_period
+        neg_up_bound = -0.9*max_period
+        fft_power_cut = 1.
+
+        for i, per in enumerate(period):
+            if per > pos_low_bound and per < pos_up_bound:
                 fft_flux[i] = 0
-            if time > -(rel_time+0.03) and time < -(rel_time-0.07):
+
+            elif per > neg_low_bound and per < neg_up_bound:
                 fft_flux[i] = 0
+
+            elif (per < pos_low_bound and per > 0) and (fft_power1[i] > fft_power_cut):
+                if i-2 >= 0 and i+3 <= len(fft_flux)-1:
+                    for j in range(i-2, i+3):
+                        fft_flux[j] = 0
+
+            elif (per > pos_up_bound and per < 10) and (fft_power1[i] > fft_power_cut):
+                if i-2 >= 0 and i+3 <= len(fft_flux)-1:
+                    for j in range(i-2, i+3):
+                        fft_flux[j] = 0
+
+            elif (per < neg_low_bound and per > -10) and (fft_power1[i] > fft_power_cut):
+                if i-2 >= 0 and i+3 <= len(fft_flux)-1:
+                    for j in range(i-2, i+3):
+                        fft_flux[j] = 0
+
+            elif (per > neg_up_bound and per < 0) and (fft_power1[i] > fft_power_cut):
+                if i-2 >= 0 and i+3 <= len(fft_flux)-1:
+                    for j in range(i-2, i+3):
+                        fft_flux[j] = 0
 
         fft_power2 = np.sqrt(fft_flux.real**2+fft_flux.imag**2)
 
-        plt.plot(fft_time, fft_power2)
-        plt.axvline(rel_time, color="r", lw=4, alpha=0.3)
-        plt.axvline(-rel_time, color="r", lw=4, alpha=0.3)
-        plt.xlim(-(rel_time+0.2), rel_time+0.2)
-        plt.show()
-        plt.close()
+
+        plt.plot(period, fft_power2)
+        plt.axvline(max_period, color="r", lw=4, alpha=0.3)
+        plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
+        plt.xlim(neg_low_bound-0.1*max_period, pos_up_bound+0.1*max_period)
+        plt.savefig('/home/earleyn/figures/notch_filter_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+        plt.clf()
 
         #Inverse fourier transform
         ifft_flux = np.fft.ifft(fft_flux)
@@ -138,8 +160,11 @@ class FindTransits(object):
         pflux = np.sqrt(ifft_flux.real**2+ifft_flux.imag**2) #processed flux
 
         plt.plot(pflux)
-        plt.show()
-        plt.close()
+        plt.xlabel('Cadences')
+        plt.ylabel('Detrended Normalized Flux')
+        #plt.xlim(200,202)
+        plt.savefig('/home/earleyn/figures/det_lc_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+        plt.clf()
 
         det_flux = []
         for value in (np.where(even_flux != 1.0000001))[0]:
@@ -151,7 +176,7 @@ class FindTransits(object):
 
         # Confirming to see that rotation period is not preserved in processed data
         rotper, ls_results = self.find_rotper(self.time, self.det_flux)
-        print('The rotation period from Lomb-Scargle is ' +str(rotper))
+        #print('The rotation period from Lomb-Scargle is ' +str(rotper))
 
         self.make_lombscarg(self.time, self.det_flux)
 
@@ -159,8 +184,11 @@ class FindTransits(object):
     def do_bls(self):
         """
         """
+        self.bls_time = self.time[20:981]
+        self.bls_flux = self.det_flux[20:981]
+
         durations = np.linspace(0.05, 0.2, 10)
-        bls_model = BLS(self.time, self.det_flux)
+        bls_model = BLS(self.bls_time, self.bls_flux)
         bls_results = bls_model.autopower(durations, frequency_factor=5.0)
         self.bls_results = bls_results
 
@@ -197,9 +225,10 @@ class FindTransits(object):
         ax.set_xlim(self.bls_results.period.min(), self.bls_results.period.max())
         ax.set_xlabel("period [days]")
         ax.set_ylabel("log likelihood")
+        #print("The most likely period is" + " " +str(peak_period))
 
-        plt.show()
-        print("The most likely period is" + " " +str(peak_period))
+        plt.savefig('/home/earleyn/figures/bls_pgram_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+        plt.clf()
 
 
     def plot_box(self):
@@ -210,8 +239,8 @@ class FindTransits(object):
 
         # Plot the light curve and best-fit model
         ax = axes[0]
-        ax.plot(self.time, self.det_flux, ".k", ms=3)
-        x = np.linspace(self.time.min(), self.time.max(), 3*len(self.time))
+        ax.plot(self.bls_time, self.bls_flux, ".k", ms=3)
+        x = np.linspace(self.bls_time.min(), self.bls_time.max(), 3*len(self.bls_time))
         f = self.bls_model.model(x, self.bls_period, self.bls_duration, self.bls_t0)
         ax.plot(x, f, lw=0.75)
         ax.set_xlabel("time [days]")
@@ -219,9 +248,9 @@ class FindTransits(object):
 
         # Plot the folded data points within 0.5 days of the transit time
         ax = axes[1]
-        x = (self.time - self.bls_t0 + 0.5*self.bls_period) % self.bls_period - 0.5*self.bls_period
+        x = (self.bls_time - self.bls_t0 + 0.5*self.bls_period) % self.bls_period - 0.5*self.bls_period
         m = np.abs(x) < 0.5
-        ax.plot(x[m], self.det_flux[m], ".k", ms=3)
+        ax.plot(x[m], self.bls_flux[m], ".k", ms=3)
 
         # Over-plot the best fit model
         x = np.linspace(-0.5, 0.5, 1000)
@@ -231,37 +260,15 @@ class FindTransits(object):
         ax.set_xlabel("time since transit [days]")
         ax.set_ylabel("de-trended flux")
 
-        plt.show()
-
-
-    def mask_transits(self):
-        """
-        """
-        start_times = []
-        end_times = []
-
-        for t in self.bls_model.compute_stats(self.bls_period, self.bls_duration, self.bls_t0)['transit_times']:
-            start_times.append(t - (self.bls_duration/2))
-            end_times.append(t + (self.bls_duration/2))
-
-        corrected_start = np.array(start_times) - 0.02 #does 0.02 work?
-        corrected_end = np.array(end_times) + 0.02
-
-        mask_trns = np.ones(len(self.det_flux), dtype=bool)
-
-        for i, t in enumerate(corrected_start):
-            pre_mask = np.where((self.time > t) & (self.time < (corrected_end[i])))
-            for j in pre_mask:
-                mask_trns[j] = False
-
-        self.mask_trns = mask_trns
+        plt.savefig('/home/earleyn/figures/box_plot_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+        plt.clf()
 
 
 
     def build_GPmodel(self, mask=None, start=None):
         """from exoplanet"""
 
-        #find rotation period
+        # Find rotation period
         rotper, ls_results = self.find_rotper(self.time, self.flux)
 
         if mask is None:
@@ -294,7 +301,6 @@ class FindTransits(object):
             ecc = BoundedBeta("ecc", alpha=0.867, beta=3.03, testval=0.1)
             omega = xo.distributions.Angle("omega")
 
-
             # The parameters of the RotationTerm kernel
             logamp = pm.Normal("logamp", mu=np.log(np.var(self.flux[mask])), sd=5.0)
             logrotperiod = pm.Normal("logrotperiod", mu=np.log(rotper), sd=5.0)
@@ -302,44 +308,31 @@ class FindTransits(object):
             logdeltaQ = pm.Normal("logdeltaQ", mu=2.0, sd=10.0)
             mix = pm.Uniform("mix", lower=0, upper=1.0)
 
-            # # Transit jitter & GP parameters
-            # logs2 = pm.Normal("logs2", mu=np.log(np.var(self.flux[mask])), sd=10)
-            # logw0_guess = np.log(2*np.pi/10)
-            # logw0 = pm.Normal("logw0", mu=logw0_guess, sd=10)
+            # Transit jitter & GP parameters
             logs2 = pm.Normal("logs2", mu=2*np.log(np.min(self.flux_err[mask])), sd=5.0)
-
-            # # We'll parameterize using the maximum power (S_0 * w_0^4) instead of
-            # # S_0 directly because this removes some of the degeneracies between
-            # # S_0 and omega_0
-            # logpower = pm.Normal("logpower", mu=np.log(np.var(self.flux[mask]))+4*logw0_guess, sd=10)
-            # logS0 = pm.Deterministic("logS0", logpower - 4 * logw0)
 
             # Tracking planet parameters
             period = pm.Deterministic("period", tt.exp(logP))
+
             # Track the rotation period as a deterministic
             rotperiod = pm.Deterministic("rotation_period", tt.exp(logrotperiod))
-
 
             # Orbit model
             orbit = xo.orbits.KeplerianOrbit(r_star=r_star, m_star=m_star, period=period, t0=t0, b=b, ecc=ecc, omega=omega)
 
             # Compute the model light curve using starry, r = r_pl
             light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=r_pl, t=self.time[mask], texp=0.021)
-            light_curve = pm.math.sum(light_curves, axis=-1) #+ mean
+            light_curve = pm.math.sum(light_curves, axis=-1)
             pm.Deterministic("light_curves", light_curves)
 
-
             # GP model for the light curve
-            # kernel = xo.gp.terms.SHOTerm(log_S0=logS0, log_w0=logw0, Q=1/np.sqrt(2))
-            # gp = xo.gp.GP(kernel, self.time[mask], tt.exp(logs2) + tt.zeros(mask.sum()), J=2)
             kernel = xo.gp.terms.RotationTerm(log_amp=logamp, period=rotperiod, log_Q0=logQ0, log_deltaQ=logdeltaQ, mix=mix)
             gp = xo.gp.GP(kernel, self.time[mask], ((self.flux_err[mask])**2 + tt.exp(logs2)), J=4)
 
-            # pm.Potential("transit_obs", gp.log_likelihood(self.flux[mask] - light_curve))
-            # pm.Deterministic("gp_pred", gp.predict())
             # Compute the Gaussian Process likelihood and add it into the
             # the PyMC3 model as a "potential"
             pm.Potential("loglike", gp.log_likelihood(self.flux[mask] - mean - light_curve))
+
             # Compute the mean model prediction for plotting purposes
             pm.Deterministic("pred", gp.predict())
             pm.Deterministic("loglikelihood", gp.log_likelihood(self.flux[mask] - mean - light_curve))
@@ -349,7 +342,6 @@ class FindTransits(object):
             # a better solution by trying different combinations of parameters in turn
             if start is None:
                 start = GPmodel.test_point
-            # map_soln = xo.optimize(start=start, vars=[logs2, logpower, logw0])
             map_soln = xo.optimize(start=start, vars=[mean])
             map_soln = xo.optimize(start=map_soln, vars=[b])
             map_soln = xo.optimize(start=map_soln, vars=[logP, t0])
@@ -358,7 +350,6 @@ class FindTransits(object):
             map_soln = xo.optimize(start=map_soln, vars=[b])
             map_soln = xo.optimize(start=map_soln, vars=[ecc, omega])
             map_soln = xo.optimize(start=map_soln, vars=[mean])
-            # map_soln = xo.optimize(start=map_soln, vars=[logs2, logpower, logw0])
             map_soln = xo.optimize(start=map_soln)
 
             # Optimize to find the maximum a posteriori parameters
@@ -374,40 +365,11 @@ class FindTransits(object):
 
         return GPmodel, map_soln
 
-            # ############# Stellar variability model ############################
-            # # A jitter term describing excess white noise
-            # logs2 = pm.Normal("logs2", mu=2*np.log(np.min(self.flux_err)), sd=5.0)
-            #
-            # # The parameters of the RotationTerm kernel
-            # logamp = pm.Normal("logamp", mu=np.log(np.var(self.flux)), sd=5.0)
-            # logrotperiod = pm.Normal("logperiod", mu=np.log(rotper), sd=5.0)
-            # logQ0 = pm.Normal("logQ0", mu=1.0, sd=10.0)
-            # logdeltaQ = pm.Normal("logdeltaQ", mu=2.0, sd=10.0)
-            # mix = pm.Uniform("mix", lower=0, upper=1.0)
-            #
-            # # Track the rotation period as a deterministic
-            # rotperiod = pm.Deterministic("rotation_period", tt.exp(logrotperiod))
-            #
-            # # Set up the Gaussian Process model
-            # kernel = xo.gp.terms.RotationTerm(log_amp=logamp, period=logrotperiod, log_Q0=logQ0, log_deltaQ=logdeltaQ, mix=mix)
-            # gp = xo.gp.GP(kernel, self.time, ((self.flux_err)**2 + tt.exp(logs2)), J=4)
-            #
-            # # Compute the Gaussian Process likelihood and add it into the
-            # # the PyMC3 model as a "potential"
-            # pm.Potential("loglike", gp.log_likelihood((self.flux) - mean))
-            #
-            # # Compute the mean model prediction for plotting purposes
-            # pm.Deterministic("pred", gp.predict())
-            #
-            # # Optimize to find the maximum a posteriori parameters
-            # map_soln = xo.optimize(start=GPmodel.test_point)
-
-        ########################################################################
 
     def build_no_pl_GPmodel(self, mask=None, start=None):
         """from exoplanet"""
 
-        #find rotation period
+        #Find rotation period
         rotper, ls_results = self.find_rotper(self.time, self.flux)
 
         if mask is None:
@@ -465,15 +427,14 @@ class FindTransits(object):
 
 
             # GP model for the light curve
-
             kernel = xo.gp.terms.RotationTerm(log_amp=logamp, period=rotperiod, log_Q0=logQ0, log_deltaQ=logdeltaQ, mix=mix)
             gp = xo.gp.GP(kernel, self.time[mask], ((self.flux_err[mask])**2 + tt.exp(logs2)), J=4)
 
-            # pm.Potential("transit_obs", gp.log_likelihood(self.flux[mask] - light_curve))
-            # pm.Deterministic("gp_pred", gp.predict())
+
             # Compute the Gaussian Process likelihood and add it into the
             # the PyMC3 model as a "potential"
             pm.Potential("loglike", gp.log_likelihood(self.flux[mask] - mean - light_curve))
+
             # Compute the mean model prediction for plotting purposes
             pm.Deterministic("pred", gp.predict())
             pm.Deterministic("loglikelihood", gp.log_likelihood(self.flux[mask] - mean - light_curve))
@@ -536,32 +497,10 @@ class FindTransits(object):
         ax.set_xlim(self.time[mask].min(), self.time[mask].max())
         ax.set_xlabel("time [days]")
 
-        plt.show()
+        plt.savefig('/home/earleyn/figures/GPmodel_lc_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+        plt.clf()
 
 
-    def plot_GPmodel(self, GPmodel, soln, mask=None):
-        '''
-        '''
-        with GPmodel:
-            mu = xo.eval_in_model(self.gp.predict(self.time, return_var=False), soln)
-
-        plt.plot(self.time, self.flux, "k", lw=1.5, alpha=0.3, label="truth")
-
-        plt.plot(self.time, mu+1, color="C1", label="prediction")
-
-        gp_mod = soln["pred"] + soln["mean"]
-        fig, axes = plt.subplots(1, 1, figsize=(10, 7), sharex=True)
-        ax = axes
-        ax.plot(np.mod(self.time, soln["period"]), self.flux - mu, "k.", label="de-trended data")
-
-        for i, l in enumerate("b"):
-            mod = soln["light_curves"][:, i]
-            ax.plot(np.mod(self.time[mask], soln["period"]), mod+1, "b.", label="model")
-
-        ax.legend(fontsize=10, loc=3)
-        ax.set_ylabel("de-trended flux")
-
-        plt.show()
 
     # def sample_model(self, model, tune=500):
     #     '''
@@ -574,62 +513,16 @@ class FindTransits(object):
     #
     #     self.trace = trace
     #     pm.summary(trace, varnames=["logw0", "logpower", "logs2", "omega", "ecc", "r_pl", "b", "t0", "logP", "r_star", "m_star", "u_star", "mean"])
-
-
-
-    def plot_folded_lc(self, trace, mask):
-        '''
-        '''
-        # Compute the GP prediction
-        gp_mod = np.median(trace["pred"] + trace["mean"][:, None], axis=0)
-
-        # Get the posterior median orbital parameters
-        p = np.median(trace["period"])
-        t0 = np.median(trace["t0"])
-
-        # Plot the folded data
-        x_fold = (self.time[mask] - t0 + 0.5*p) % p - 0.5*p
-        plt.plot(x_fold, self.flux[mask] - gp_mod, ".k", label="data", zorder=-1000)
-
-        # Overplot the phase binned light curve
-        bins = np.linspace(-0.41, 0.41, 50)
-        denom, _ = np.histogram(x_fold, bins)
-        num, _ = np.histogram(x_fold, bins, weights=self.flux[mask])
-        denom[num == 0] = 1.0
-        plt.plot(0.5*(bins[1:] + bins[:-1]), num / denom, "o", color="C2",
-                 label="binned")
-
-        # Plot the folded model
-        inds = np.argsort(x_fold)
-        inds = inds[np.abs(x_fold)[inds] < 0.3]
-        pred = trace["light_curves"][:, inds, 0]
-        pred = np.percentile(pred, [16, 50, 84], axis=0)
-        plt.plot(x_fold[inds], pred[1], color="C1", label="model")
-        art = plt.fill_between(x_fold[inds], pred[0], pred[2], color="C1", alpha=0.5,
-                               zorder=1000)
-        art.set_edgecolor("none")
-
-        # Annotate the plot with the planet's period
-        txt = "period = {0:.5f} +/- {1:.5f} d".format(
-            np.mean(trace["period"]), np.std(trace["period"]))
-        plt.annotate(txt, (0, 0), xycoords="axes fraction",
-                     xytext=(5, 5), textcoords="offset points",
-                     ha="left", va="bottom", fontsize=12)
-
-        plt.legend(fontsize=10, loc=4)
-        plt.xlim(-0.5*p, 0.5*p)
-        plt.xlabel("time since transit [days]")
-        plt.ylabel("de-trended flux")
-        plt.xlim(-0.15, 0.15);
-
-
-    def plot_corner(self, trace):
-        '''
-        '''
-        varnames = ["period", "b", "ecc", "r_pl"]
-        samples = pm.trace_to_dataframe(trace, varnames=varnames)
-
-        # Convert the radius to Earth radii
-        samples["r_pl"] = (np.array(samples["r_pl"]) * u.R_sun).to(u.R_earth).value
-
-        corner.corner(samples[["period", "r_pl", "b", "ecc"]], labels=["period [days]", "radius [Earth radii]", "impact param", "eccentricity"]);
+    #
+    #
+    #
+    # def plot_corner(self, trace):
+    #     '''
+    #     '''
+    #     varnames = ["period", "b", "ecc", "r_pl"]
+    #     samples = pm.trace_to_dataframe(trace, varnames=varnames)
+    #
+    #     # Convert the radius to Earth radii
+    #     samples["r_pl"] = (np.array(samples["r_pl"]) * u.R_sun).to(u.R_earth).value
+    #
+    #     corner.corner(samples[["period", "r_pl", "b", "ecc"]], labels=["period [days]", "radius [Earth radii]", "impact param", "eccentricity"]);
