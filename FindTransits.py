@@ -18,14 +18,13 @@ class FindTransits(object):
     '''Runs through the box-least-squares method to find transits and
     performs GP modeling'''
 
-    def __init__(self, time, flux, flux_err, cads, tic, sector, run):
+    def __init__(self, time, flux, flux_err, cads, tic, run):
 
         self.time = time
         self.flux = flux
         self.flux_err = flux_err
         self.cads = cads
         self.tic = tic
-        self.sector = sector
         self.run = run
 
         self.find_rotper(time, flux)
@@ -53,17 +52,21 @@ class FindTransits(object):
         plt.axvline(np.log10(rotper), color="k", lw=4, alpha=0.3)
         plt.xlim((-np.log10(freq)).min(), (-np.log10(freq)).max())
         plt.yticks([])
-        plt.xlabel("log10(period)")
         plt.ylabel("power")
 
         if flux is self.flux:
-            plt.label('The rotation period from Lomb-Scargle is ' +str(rotper))
-            plt.savefig('/home/earleyn/figures/raw_lombscarg_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+            plt.title('The rotation period from Lomb-Scargle is {}'.format(rotper))
+            plt.xlabel('log10(period)')
+            #plt.savefig(fname='/home/earleyn/figures/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         elif flux is self.det_flux:
-            plt.savefig('/home/earleyn/figures/det_lombscarg_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
+            plt.title('The rotation period after detrending is {}'.format(rotper))
+            plt.xlabel('log10(period)')
+            #plt.savefig(fname='/home/earleyn/figures/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
-        plt.clf()
+        plt.close()
 
 
 
@@ -100,21 +103,21 @@ class FindTransits(object):
 
         max_power = max(fft_list,key=itemgetter(0))[0]
         max_period = max(fft_list,key=itemgetter(0))[1]
-        #print('The rotation period after FFT is '+str(max_period))
 
         plt.plot(period, fft_power1)
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(-1.1*max_period, 1.1*max_period)
-        plt.savefig('/home/earleyn/figures/fft_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
-        plt.clf()
+        #plt.savefig(fname='/home/earleyn/figures/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.close()
 
         #Signal processing: Top hat filter
         #Bounds
-        pos_low_bound = 0.9*max_period
-        pos_up_bound = 1.1*max_period
-        neg_low_bound = -1.1*max_period
-        neg_up_bound = -0.9*max_period
+        pos_low_bound = 0.75*max_period
+        pos_up_bound = 1.25*max_period
+        neg_low_bound = -1.25*max_period
+        neg_up_bound = -0.75*max_period
         fft_power_cut = 1.
 
         for i, per in enumerate(period):
@@ -151,8 +154,9 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(neg_low_bound-0.1*max_period, pos_up_bound+0.1*max_period)
-        plt.savefig('/home/earleyn/figures/notch_filter_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
-        plt.clf()
+        #plt.savefig(fname='/home/earleyn/figures/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.close()
 
         #Inverse fourier transform
         ifft_flux = np.fft.ifft(fft_flux)
@@ -162,9 +166,9 @@ class FindTransits(object):
         plt.plot(pflux)
         plt.xlabel('Cadences')
         plt.ylabel('Detrended Normalized Flux')
-        #plt.xlim(200,202)
-        plt.savefig('/home/earleyn/figures/det_lc_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
-        plt.clf()
+        #plt.savefig(fname='/home/earleyn/figures/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.close()
 
         det_flux = []
         for value in (np.where(even_flux != 1.0000001))[0]:
@@ -176,7 +180,6 @@ class FindTransits(object):
 
         # Confirming to see that rotation period is not preserved in processed data
         rotper, ls_results = self.find_rotper(self.time, self.det_flux)
-        #print('The rotation period from Lomb-Scargle is ' +str(rotper))
 
         self.make_lombscarg(self.time, self.det_flux)
 
@@ -227,8 +230,9 @@ class FindTransits(object):
         ax.set_ylabel("log likelihood")
         #print("The most likely period is" + " " +str(peak_period))
 
-        plt.savefig('/home/earleyn/figures/bls_pgram_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
-        plt.clf()
+        #plt.savefig(fname='/home/earleyn/figures/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.close()
 
 
     def plot_box(self):
@@ -260,8 +264,9 @@ class FindTransits(object):
         ax.set_xlabel("time since transit [days]")
         ax.set_ylabel("de-trended flux")
 
-        plt.savefig('/home/earleyn/figures/box_plot_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
-        plt.clf()
+        #plt.savefig(fname='/home/earleyn/figures/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.close()
 
 
 
@@ -465,7 +470,7 @@ class FindTransits(object):
 
 
 
-    def plot_lc(self, soln, mask=None):
+    def plot_lc(self, soln, mask=None, pl=True):
         '''
 		'''
         if mask is None:
@@ -497,32 +502,12 @@ class FindTransits(object):
         ax.set_xlim(self.time[mask].min(), self.time[mask].max())
         ax.set_xlabel("time [days]")
 
-        plt.savefig('/home/earleyn/figures/GPmodel_lc_tic{:d}_sect{:d}_run{:d}'.format(self.tic, self.sector, self.run), dpi=1000)
-        plt.clf()
+        if pl is True:
+            #plt.savefig(fname='/home/earleyn/figures/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
+        else:
+            #plt.savefig(fname='/home/earleyn/figures/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
-
-    # def sample_model(self, model, tune=500):
-    #     '''
-    #     '''
-    #     np.random.seed(42)
-    #     sampler = xo.PyMC3Sampler(finish=300, chains=4)
-    #     with GPmodel:
-    #         burnin = sampler.tune(tune=tune, start=map_soln, step_kwargs=dict(target_accept=0.9))
-    #         trace = sampler.sample(draws=2000)
-    #
-    #     self.trace = trace
-    #     pm.summary(trace, varnames=["logw0", "logpower", "logs2", "omega", "ecc", "r_pl", "b", "t0", "logP", "r_star", "m_star", "u_star", "mean"])
-    #
-    #
-    #
-    # def plot_corner(self, trace):
-    #     '''
-    #     '''
-    #     varnames = ["period", "b", "ecc", "r_pl"]
-    #     samples = pm.trace_to_dataframe(trace, varnames=varnames)
-    #
-    #     # Convert the radius to Earth radii
-    #     samples["r_pl"] = (np.array(samples["r_pl"]) * u.R_sun).to(u.R_earth).value
-    #
-    #     corner.corner(samples[["period", "r_pl", "b", "ecc"]], labels=["period [days]", "radius [Earth radii]", "impact param", "eccentricity"]);
+        plt.close()
