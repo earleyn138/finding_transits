@@ -58,10 +58,10 @@ def model_lc(results):
     mask_out = np.abs(resid) < 5 * rms
 
     # Rebuild model with outliers masked
-    GPmodel, map_soln = results.build_GPmodel(mask_out, map_soln0)
+    GPmodel, map_soln = results.build_GPmodel(mask=mask_out, start=map_soln0, pl=True)
 
     # Model with no planet
-    no_pl_GPmodel, no_pl_map_soln = results.build_no_pl_GPmodel(mask_out, map_soln0)
+    no_pl_GPmodel, no_pl_map_soln = results.build_GPmodel(mask=mask_out, start=map_soln0, pl=False)
 
     # Log likelihoods
     logp = map_soln['loglikelihood']
@@ -220,8 +220,9 @@ file_list = []
 for filename in os.listdir(lc_dir):
     res_tic = re.findall("_tic(\d+)_", filename)
     tic = int(res_tic[0])
-    tic_list.append(tic)
-    file_list.append(filename)
+    if tic == 232073492:
+        tic_list.append(tic)
+        file_list.append(filename)
 
 
 multi_tic = repeat(tic_list)
@@ -238,6 +239,3 @@ if len(multi_tic) > 0:
 for i, tic in enumerate(tic_list):
     if (tic not in multi_tic) == True:
         run_script(file=file_list[i], tic=tic, lc_dir=lc_dir, data_dir=data_dir)
-
-# run_script(file=['hlsp_eleanor_tess_ffi_tic232073492_s01_tess_v0.2.2_lc.fits',
-#             'hlsp_eleanor_tess_ffi_tic232073492_s02_tess_v0.2.2_lc.fits'], tic=232073492, lc_dir=lc_dir, data_dir=data_dir)

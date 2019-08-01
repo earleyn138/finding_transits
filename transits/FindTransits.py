@@ -169,7 +169,7 @@ class FindTransits(object):
         plt.plot(pflux)
         plt.xlabel('Cadences')
         plt.ylabel('Detrended Normalized Flux')
-        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lc_tic{:d}_run{:d}''.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/home/earleyn/figures/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
@@ -275,7 +275,7 @@ class FindTransits(object):
 
 
 
-    def build_GPmodel(self, mask=None, start=None):
+    def build_GPmodel(self, mask=None, start=None, pl=True):
         """from exoplanet"""
 
         # Find rotation period
@@ -288,7 +288,10 @@ class FindTransits(object):
 
             # Parameters for the stellar properties
             mean = pm.Normal("mean", mu=0.0, sd=10.0)
+            mean_print = tt.printing.Print('mean')(mean)
+
             u_star = xo.distributions.QuadLimbDark("u_star")
+            u_star_print = tt.printing.Print('u_star')(u_star)
 
             # Stellar parameters from Huang et al (2018)
             M_star_huang = 1.094, 0.039
@@ -299,27 +302,53 @@ class FindTransits(object):
 
             # Orbital parameters for the planets
             logP = pm.Normal("logP", mu=np.log(self.bls_period), sd=1)
+            logP_print = tt.printing.Print('logP')(logP)
+
             t0 = pm.Normal("t0", mu=self.bls_t0, sd=1)
+            t0_print = tt.printing.Print('t0')(t0)
+
             b = pm.Flat("b", transform=pm.distributions.transforms.logodds, testval=0.5)
+            b_print = tt.printing.Print('b')(b)
+
             logr = pm.Normal("logr", sd=1.0, mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]))
+            logr_print = tt.printing.Print('logr')(logr)
+
             r_pl = pm.Deterministic("r_pl", tt.exp(logr))
+            r_pl_print = tt.printing.Print('r_pl')(r_pl)
+
             ror = pm.Deterministic("ror", r_pl / r_star)
+            ror_print = tt.printing.Print('ror')(ror)
+
 
             # This is the eccentricity prior from Kipping (2013):
             # https://arxiv.org/abs/1306.4982
             BoundedBeta = pm.Bound(pm.Beta, lower=0, upper=1-1e-5)
+
             ecc = BoundedBeta("ecc", alpha=0.867, beta=3.03, testval=0.1)
+            ecc_print = tt.printing.Print('ecc')(ecc)
+
             omega = xo.distributions.Angle("omega")
+            omega_print = tt.printing.Print('omega')(omega)
 
             # The parameters of the RotationTerm kernel
             logamp = pm.Normal("logamp", mu=np.log(np.var(self.flux[mask])), sd=5.0)
+            logamp_print = tt.printing.Print('logamp')(logamp)
+
             logrotperiod = pm.Normal("logrotperiod", mu=np.log(rotper), sd=5.0)
+            logrotperiod_print = tt.printing.Print('logrotperiod')(logrotperiod)
+
             logQ0 = pm.Normal("logQ0", mu=1.0, sd=10.0)
+            logQ0_print = tt.printing.Print('logQ0')(logQ0)
+
             logdeltaQ = pm.Normal("logdeltaQ", mu=2.0, sd=10.0)
+            logdeltaQ_print = tt.printing.Print('logdeltaQ')(logdeltaQ)
+
             mix = pm.Uniform("mix", lower=0, upper=1.0)
+            mix_print = tt.printing.Print('mix')(mix)
 
             # Transit jitter & GP parameters
             logs2 = pm.Normal("logs2", mu=2*np.log(np.min(self.flux_err[mask])), sd=5.0)
+            logs2_print = tt.printing.Print('logs2')(logs2)
 
             # Tracking planet parameters
             period = pm.Deterministic("period", tt.exp(logP))
@@ -331,7 +360,12 @@ class FindTransits(object):
             orbit = xo.orbits.KeplerianOrbit(r_star=r_star, m_star=m_star, period=period, t0=t0, b=b, ecc=ecc, omega=omega)
 
             # Compute the model light curve using starry, r = r_pl
-            light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=r_pl, t=self.time[mask], texp=0.021)
+            if pl is True:
+                light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=r_pl, t=self.time[mask], texp=0.021)
+
+            else:
+                light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=0, t=self.time[mask], texp=0.021)
+
             light_curve = pm.math.sum(light_curves, axis=-1)
             pm.Deterministic("light_curves", light_curves)
 
@@ -352,23 +386,23 @@ class FindTransits(object):
             # a better solution by trying different combinations of parameters in turn
             if start is None:
                 start = GPmodel.test_point
-            map_soln = xo.optimize(start=start, vars=[mean])
-            map_soln = xo.optimize(start=map_soln, vars=[b])
-            map_soln = xo.optimize(start=map_soln, vars=[logP, t0])
-            map_soln = xo.optimize(start=map_soln, vars=[u_star])
-            map_soln = xo.optimize(start=map_soln, vars=[logr])
-            map_soln = xo.optimize(start=map_soln, vars=[b])
-            map_soln = xo.optimize(start=map_soln, vars=[ecc, omega])
-            map_soln = xo.optimize(start=map_soln, vars=[mean])
+            map_soln = xo.optimize(start=start, vars=[mean_print])
+            map_soln = xo.optimize(start=map_soln, vars=[b_print])
+            map_soln = xo.optimize(start=map_soln, vars=[logP_print, t0_print])
+            map_soln = xo.optimize(start=map_soln, vars=[u_star_print])
+            map_soln = xo.optimize(start=map_soln, vars=[logr_print])
+            map_soln = xo.optimize(start=map_soln, vars=[b_print])
+            map_soln = xo.optimize(start=map_soln, vars=[ecc_print, omega_print])
+            map_soln = xo.optimize(start=map_soln, vars=[mean_print])
             map_soln = xo.optimize(start=map_soln)
 
             # Optimize to find the maximum a posteriori parameters
-            map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
-            map_soln = xo.optimize(start=map_soln, vars=[logamp])
-            map_soln = xo.optimize(start=map_soln, vars=[logrotperiod])
-            map_soln = xo.optimize(start=map_soln, vars=[mean])
-            map_soln = xo.optimize(start=map_soln, vars=[mix])
-            map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
+            map_soln = xo.optimize(start=map_soln, vars=[logs2_print, logQ0_print, logdeltaQ_print])
+            map_soln = xo.optimize(start=map_soln, vars=[logamp_print])
+            map_soln = xo.optimize(start=map_soln, vars=[logrotperiod_print])
+            map_soln = xo.optimize(start=map_soln, vars=[mean_print])
+            map_soln = xo.optimize(start=map_soln, vars=[mix_print])
+            map_soln = xo.optimize(start=map_soln, vars=[logs2_print, logQ0_print, logdeltaQ_print])
             map_soln = xo.optimize(start=map_soln)
 
             self.gp = gp
@@ -376,7 +410,7 @@ class FindTransits(object):
         return GPmodel, map_soln
 
 
-    def build_no_pl_GPmodel(self, mask=None, start=None):
+    # def build_no_pl_GPmodel(self, mask=None, start=None):
         """from exoplanet"""
 
         #Find rotation period
@@ -472,7 +506,6 @@ class FindTransits(object):
             no_pl_map_soln = xo.optimize(start=no_pl_map_soln)
 
         return no_pl_GPmodel, no_pl_map_soln
-
 
 
     def plot_lc(self, soln, mask=None, pl=True):
