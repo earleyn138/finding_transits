@@ -90,8 +90,6 @@ def save_data(directory, tic, x_values, y_values, yerr_values, cad_values):
     with open(directory+'/data_tic{:d}.p'.format(tic), 'wb') as outfile:
         pickle.dump(data, outfile)
 
-    # with open('/Users/nicholasearley/Desktop/slow_tics/data_tic{:d}.p'.format(tic), 'wb') as outfile:
-    #     pickle.dump(data, outfile)
 
 
 def save_models(directory, tic, deltaloglike_values, planet_results, planet_models, planet_solns, no_pl_models, no_pl_solns, planet_outmasks):
@@ -123,8 +121,6 @@ def save_models(directory, tic, deltaloglike_values, planet_results, planet_mode
     with open(directory+'/modeling_results_tic{:d}.p'.format(tic), 'wb') as outfile:
         pickle.dump(model, outfile)
 
-    # with open('/Users/nicholasearley/Desktop/slow_tics/data_tic{:d}.p'.format(tic), 'wb') as outfile:
-    #     pickle.dump(data, outfile)
 
 
 def run_script(file, tic, lc_dir, data_dir):
