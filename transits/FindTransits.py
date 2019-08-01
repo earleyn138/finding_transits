@@ -57,13 +57,15 @@ class FindTransits(object):
         if flux is self.flux:
             plt.title('The rotation period from Lomb-Scargle is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            plt.savefig(fname='/home/earleyn/figures/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            #plt.savefig(fname='/home/earleyn/figures/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         elif flux is self.det_flux:
             plt.title('The rotation period after detrending is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            plt.savefig(fname='/home/earleyn/figures/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            #plt.savefig(fname='/home/earleyn/figures/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         plt.close()
@@ -107,7 +109,8 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(-1.1*max_period, 1.1*max_period)
-        plt.savefig(fname='/home/earleyn/figures/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/home/earleyn/figures/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -153,7 +156,8 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(neg_low_bound-0.1*max_period, pos_up_bound+0.1*max_period)
-        plt.savefig(fname='/home/earleyn/figures/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/home/earleyn/figures/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -165,7 +169,8 @@ class FindTransits(object):
         plt.plot(pflux)
         plt.xlabel('Cadences')
         plt.ylabel('Detrended Normalized Flux')
-        plt.savefig(fname='/home/earleyn/figures/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lc_tic{:d}_run{:d}''.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/home/earleyn/figures/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -228,7 +233,8 @@ class FindTransits(object):
         ax.set_xlabel("period [days]")
         ax.set_ylabel("log likelihood")
 
-        plt.savefig(fname='/home/earleyn/figures/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/home/earleyn/figures/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -262,7 +268,8 @@ class FindTransits(object):
         ax.set_xlabel("time since transit [days]")
         ax.set_ylabel("de-trended flux")
 
-        plt.savefig(fname='/home/earleyn/figures/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/home/earleyn/figures/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -501,11 +508,13 @@ class FindTransits(object):
         ax.set_xlabel("time [days]")
 
         if pl is True:
-            plt.savefig(fname='/home/earleyn/figures/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            #plt.savefig(fname='/home/earleyn/figures/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         else:
-            plt.savefig(fname='/home/earleyn/figures/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            #plt.savefig(fname='/home/earleyn/figures/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         plt.close()
