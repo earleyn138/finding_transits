@@ -29,8 +29,8 @@ def plot_norm_lc(tic, time, flux):
     plt.ylabel('Normalized Flux')
     plt.xlabel('Time (days)')
     plt.title('Normalized Light Curve TIC{:d}'.format(tic))
-    plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/norm_lc_tic{:d}'.format(tic), dpi=250, format='pdf')
-    #plt.savefig(fname='/home/earleyn/figures/norm_lc_tic{:d}'.format(tic), dpi=250, format='pdf')
+    #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/norm_lc_tic{:d}'.format(tic), dpi=250, format='pdf')
+    plt.savefig(fname='/home/earleyn/figures/norm_lc_tic{:d}'.format(tic), dpi=250, format='pdf')
     #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/raw_lc_tic{:d}'.format(tic), dpi=250, format='pdf')
     plt.close()
 
@@ -208,10 +208,10 @@ def repeat(tics):
 
 
 # Reading files
-lc_dir = '/data/wallaby/earleyn/young_bois_lc'
-data_dir = '/data/wallaby/earleyn/young_bois_data'
-# lc_dir = '/home/earleyn/lc_young_bois'
-# data_dir = '/home/earleyn/data'
+#lc_dir = '/data/wallaby/earleyn/young_bois_lc'
+#data_dir = '/data/wallaby/earleyn/young_bois_data'
+lc_dir = '/home/earleyn/lc_young_bois'
+data_dir = '/home/earleyn/data'
 # lc_dir = '/Users/nicholasearley/TESS_data/young_bois_lc'
 # data_dir = '/Users/nicholasearley/TESS_data/young_bois_data'
 tic_list = []
@@ -220,9 +220,8 @@ file_list = []
 for filename in os.listdir(lc_dir):
     res_tic = re.findall("_tic(\d+)_", filename)
     tic = int(res_tic[0])
-    if tic == 232073492:
-        tic_list.append(tic)
-        file_list.append(filename)
+    tic_list.append(tic)
+    file_list.append(filename)
 
 
 multi_tic = repeat(tic_list)

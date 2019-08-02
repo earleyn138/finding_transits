@@ -57,15 +57,15 @@ class FindTransits(object):
         if flux is self.flux:
             plt.title('The rotation period from Lomb-Scargle is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-            #plt.savefig(fname='/home/earleyn/figures/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/home/earleyn/figures/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         elif flux is self.det_flux:
             plt.title('The rotation period after detrending is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-            #plt.savefig(fname='/home/earleyn/figures/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/home/earleyn/figures/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         plt.close()
@@ -109,8 +109,8 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(-1.1*max_period, 1.1*max_period)
-        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/home/earleyn/figures/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/home/earleyn/figures/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -156,8 +156,8 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(neg_low_bound-0.1*max_period, pos_up_bound+0.1*max_period)
-        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/home/earleyn/figures/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/home/earleyn/figures/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -169,8 +169,8 @@ class FindTransits(object):
         plt.plot(pflux)
         plt.xlabel('Cadences')
         plt.ylabel('Detrended Normalized Flux')
-        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/home/earleyn/figures/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/home/earleyn/figures/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -233,8 +233,8 @@ class FindTransits(object):
         ax.set_xlabel("period [days]")
         ax.set_ylabel("log likelihood")
 
-        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/home/earleyn/figures/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/home/earleyn/figures/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -268,8 +268,8 @@ class FindTransits(object):
         ax.set_xlabel("time since transit [days]")
         ax.set_ylabel("de-trended flux")
 
-        plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/home/earleyn/figures/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='/home/earleyn/figures/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
@@ -288,10 +288,10 @@ class FindTransits(object):
 
             # Parameters for the stellar properties
             mean = pm.Normal("mean", mu=0.0, sd=10.0)
-            mean_print = tt.printing.Print('mean')(mean)
+            #mean_print = tt.printing.Print('mean')(mean)
 
             u_star = xo.distributions.QuadLimbDark("u_star")
-            u_star_print = tt.printing.Print('u_star')(u_star)
+            #u_star_print = tt.printing.Print('u_star')(u_star)
 
             # Stellar parameters from Huang et al (2018)
             M_star_huang = 1.094, 0.039
@@ -302,22 +302,22 @@ class FindTransits(object):
 
             # Orbital parameters for the planets
             logP = pm.Normal("logP", mu=np.log(self.bls_period), sd=1)
-            logP_print = tt.printing.Print('logP')(logP)
+            #logP_print = tt.printing.Print('logP')(logP)
 
             t0 = pm.Normal("t0", mu=self.bls_t0, sd=1)
-            t0_print = tt.printing.Print('t0')(t0)
+            #t0_print = tt.printing.Print('t0')(t0)
 
             b = pm.Flat("b", transform=pm.distributions.transforms.logodds, testval=0.5)
-            b_print = tt.printing.Print('b')(b)
+            #b_print = tt.printing.Print('b')(b)
 
             logr = pm.Normal("logr", sd=1.0, mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]))
-            logr_print = tt.printing.Print('logr')(logr)
+            #logr_print = tt.printing.Print('logr')(logr)
 
             r_pl = pm.Deterministic("r_pl", tt.exp(logr))
-            r_pl_print = tt.printing.Print('r_pl')(r_pl)
+            #r_pl_print = tt.printing.Print('r_pl')(r_pl)
 
             ror = pm.Deterministic("ror", r_pl / r_star)
-            ror_print = tt.printing.Print('ror')(ror)
+            #ror_print = tt.printing.Print('ror')(ror)
 
 
             # This is the eccentricity prior from Kipping (2013):
@@ -325,30 +325,30 @@ class FindTransits(object):
             BoundedBeta = pm.Bound(pm.Beta, lower=0, upper=1-1e-5)
 
             ecc = BoundedBeta("ecc", alpha=0.867, beta=3.03, testval=0.1)
-            ecc_print = tt.printing.Print('ecc')(ecc)
+            #ecc_print = tt.printing.Print('ecc')(ecc)
 
             omega = xo.distributions.Angle("omega")
-            omega_print = tt.printing.Print('omega')(omega)
+            #omega_print = tt.printing.Print('omega')(omega)
 
             # The parameters of the RotationTerm kernel
             logamp = pm.Normal("logamp", mu=np.log(np.var(self.flux[mask])), sd=5.0)
-            logamp_print = tt.printing.Print('logamp')(logamp)
+            #logamp_print = tt.printing.Print('logamp')(logamp)
 
             logrotperiod = pm.Normal("logrotperiod", mu=np.log(rotper), sd=5.0)
-            logrotperiod_print = tt.printing.Print('logrotperiod')(logrotperiod)
+            #logrotperiod_print = tt.printing.Print('logrotperiod')(logrotperiod)
 
             logQ0 = pm.Normal("logQ0", mu=1.0, sd=10.0)
-            logQ0_print = tt.printing.Print('logQ0')(logQ0)
+            #logQ0_print = tt.printing.Print('logQ0')(logQ0)
 
             logdeltaQ = pm.Normal("logdeltaQ", mu=2.0, sd=10.0)
-            logdeltaQ_print = tt.printing.Print('logdeltaQ')(logdeltaQ)
+            #logdeltaQ_print = tt.printing.Print('logdeltaQ')(logdeltaQ)
 
             mix = pm.Uniform("mix", lower=0, upper=1.0)
-            mix_print = tt.printing.Print('mix')(mix)
+            #mix_print = tt.printing.Print('mix')(mix)
 
             # Transit jitter & GP parameters
             logs2 = pm.Normal("logs2", mu=2*np.log(np.min(self.flux_err[mask])), sd=5.0)
-            logs2_print = tt.printing.Print('logs2')(logs2)
+            #logs2_print = tt.printing.Print('logs2')(logs2)
 
             # Tracking planet parameters
             period = pm.Deterministic("period", tt.exp(logP))
@@ -386,23 +386,23 @@ class FindTransits(object):
             # a better solution by trying different combinations of parameters in turn
             if start is None:
                 start = GPmodel.test_point
-            map_soln = xo.optimize(start=start, vars=[mean_print])
-            map_soln = xo.optimize(start=map_soln, vars=[b_print])
-            map_soln = xo.optimize(start=map_soln, vars=[logP_print, t0_print])
-            map_soln = xo.optimize(start=map_soln, vars=[u_star_print])
-            map_soln = xo.optimize(start=map_soln, vars=[logr_print])
-            map_soln = xo.optimize(start=map_soln, vars=[b_print])
-            map_soln = xo.optimize(start=map_soln, vars=[ecc_print, omega_print])
-            map_soln = xo.optimize(start=map_soln, vars=[mean_print])
+            map_soln = xo.optimize(start=start, vars=[mean])
+            map_soln = xo.optimize(start=map_soln, vars=[b])
+            map_soln = xo.optimize(start=map_soln, vars=[logP, t0])
+            map_soln = xo.optimize(start=map_soln, vars=[u_star])
+            map_soln = xo.optimize(start=map_soln, vars=[logr])
+            map_soln = xo.optimize(start=map_soln, vars=[b])
+            map_soln = xo.optimize(start=map_soln, vars=[ecc, omega])
+            map_soln = xo.optimize(start=map_soln, vars=[mean])
             map_soln = xo.optimize(start=map_soln)
 
             # Optimize to find the maximum a posteriori parameters
-            map_soln = xo.optimize(start=map_soln, vars=[logs2_print, logQ0_print, logdeltaQ_print])
-            map_soln = xo.optimize(start=map_soln, vars=[logamp_print])
-            map_soln = xo.optimize(start=map_soln, vars=[logrotperiod_print])
-            map_soln = xo.optimize(start=map_soln, vars=[mean_print])
-            map_soln = xo.optimize(start=map_soln, vars=[mix_print])
-            map_soln = xo.optimize(start=map_soln, vars=[logs2_print, logQ0_print, logdeltaQ_print])
+            map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
+            map_soln = xo.optimize(start=map_soln, vars=[logamp])
+            map_soln = xo.optimize(start=map_soln, vars=[logrotperiod])
+            map_soln = xo.optimize(start=map_soln, vars=[mean])
+            map_soln = xo.optimize(start=map_soln, vars=[mix])
+            map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
             map_soln = xo.optimize(start=map_soln)
 
             self.gp = gp
@@ -443,13 +443,13 @@ class FindTransits(object):
         ax.set_xlabel("time [days]")
 
         if pl is True:
-            plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-            #plt.savefig(fname='/home/earleyn/figures/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/home/earleyn/figures/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         else:
-            plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-            #plt.savefig(fname='/home/earleyn/figures/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='/home/earleyn/figures/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         plt.close()
