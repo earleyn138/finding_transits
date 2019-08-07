@@ -11,7 +11,6 @@ import theano.tensor as tt
 import corner
 
 
-
 __all__ = ['FindTransits']
 
 class FindTransits(object):
@@ -57,16 +56,12 @@ class FindTransits(object):
         if flux is self.flux:
             plt.title('The rotation period from Lomb-Scargle is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             plt.savefig(fname='/home/earleyn/figures/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-            #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         elif flux is self.det_flux:
             plt.title('The rotation period after detrending is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             plt.savefig(fname='/home/earleyn/figures/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-            #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         plt.close()
 
@@ -95,7 +90,7 @@ class FindTransits(object):
 
         power_tup = []
         for i, per in enumerate(period):
-            if per < rotper+10 and per > 0:#rotper-1:
+            if per < rotper+10 and per > 0:
                 power_tup.append((i, per))
 
         fft_list = []
@@ -109,9 +104,7 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(-1.1*max_period, 1.1*max_period)
-        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.savefig(fname='/home/earleyn/figures/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         #Signal processing: Top hat filter
@@ -156,9 +149,7 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(neg_low_bound-0.1*max_period, pos_up_bound+0.1*max_period)
-        # #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.savefig(fname='/home/earleyn/figures/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        # #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         #Inverse fourier transform
@@ -169,9 +160,7 @@ class FindTransits(object):
         plt.plot(pflux)
         plt.xlabel('Cadences')
         plt.ylabel('Detrended Normalized Flux')
-        # #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.savefig(fname='/home/earleyn/figures/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        # #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         det_flux = []
@@ -191,8 +180,8 @@ class FindTransits(object):
     def do_bls(self):
         """
         """
-        self.bls_time = self.time[20:981]
-        self.bls_flux = self.det_flux[20:981]
+        self.bls_time = self.time[30:-20]
+        self.bls_flux = self.det_flux[30:-20]
 
         durations = np.linspace(0.05, 0.2, 10)
         bls_model = BLS(self.bls_time, self.bls_flux)
@@ -233,9 +222,7 @@ class FindTransits(object):
         ax.set_xlabel("period [days]")
         ax.set_ylabel("log likelihood")
 
-        # #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.savefig(fname='/home/earleyn/figures/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        # #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
 
@@ -268,9 +255,7 @@ class FindTransits(object):
         ax.set_xlabel("time since transit [days]")
         ax.set_ylabel("de-trended flux")
 
-        # #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.savefig(fname='/home/earleyn/figures/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        # #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
 
@@ -281,13 +266,6 @@ class FindTransits(object):
         # Find rotation period
         rotper, ls_results = self.find_rotper(self.time, self.flux)
 
-        # print('logP initial guess- bls period: '+str(self.bls_period))
-        # print('t0 initial guess- bls t0: '+str(self.bls_t0))
-        # print('logr initial guess: '+str(0.5*np.log(np.array(self.bls_depth))+np.log(1.10)))
-        # print('logrotperiod initial guess: '+str(np.log(rotper)))
-        # print('logamp initial guess: '+str(np.log(np.var(self.flux[mask]))))
-        # print('logs2 initial guess: '+str(2*np.log(np.min(self.flux_err[mask]))))
-
         if mask is None:
             mask = np.ones(len(self.time), dtype=bool)
 
@@ -295,10 +273,8 @@ class FindTransits(object):
 
             # Parameters for the stellar properties
             mean = pm.Normal("mean", mu=0.0, sd=10.0)
-            #mean_print = tt.printing.Print('mean')(mean)
 
             u_star = xo.distributions.QuadLimbDark("u_star")
-            #u_star_print = tt.printing.Print('u_star')(u_star)
 
             # Stellar parameters from Huang et al (2018)
             M_star_huang = 1.094, 0.039
@@ -309,56 +285,28 @@ class FindTransits(object):
 
             # Orbital parameters for the planets
             logP = pm.Normal("logP", mu=np.log(self.bls_period), sd=1)
-            #logP_print = tt.printing.Print('logP')(logP)
-
             t0 = pm.Normal("t0", mu=self.bls_t0, sd=1)
-            #t0_print = tt.printing.Print('t0')(t0)
-
-            #b = pm.Flat("b", transform=pm.distributions.transforms.logodds, testval=0.5)
             b = pm.Uniform("b", lower=0, upper=0.9)
-            #b_print = tt.printing.Print('b')(b)
-
-            #logr = pm.Normal("logr", sd=1.0, mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]))
             BoundedNormal_logr = pm.Bound(pm.Normal, lower=-5, upper=0)
             logr = BoundedNormal_logr('logr', mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]), sd=1.0)
-            #logr_print = tt.printing.Print('logr')(logr)
-
             r_pl = pm.Deterministic("r_pl", tt.exp(logr))
-            #r_pl_print = tt.printing.Print('r_pl')(r_pl)
-
             ror = pm.Deterministic("ror", r_pl / r_star)
-            #ror_print = tt.printing.Print('ror')(ror)
-
 
             # This is the eccentricity prior from Kipping (2013):
             # https://arxiv.org/abs/1306.4982
             BoundedBeta = pm.Bound(pm.Beta, lower=0, upper=1-1e-5)
-
             ecc = BoundedBeta("ecc", alpha=0.867, beta=3.03, testval=0.1)
-            #ecc_print = tt.printing.Print('ecc')(ecc)
-
             omega = xo.distributions.Angle("omega")
-            #omega_print = tt.printing.Print('omega')(omega)
 
             # The parameters of the RotationTerm kernel
             logamp = pm.Normal("logamp", mu=np.log(np.var(self.flux[mask])), sd=5.0)
-            #logamp_print = tt.printing.Print('logamp')(logamp)
-
             logrotperiod = pm.Normal("logrotperiod", mu=np.log(rotper), sd=5.0)
-            #logrotperiod_print = tt.printing.Print('logrotperiod')(logrotperiod)
-
             logQ0 = pm.Normal("logQ0", mu=1.0, sd=10.0)
-            #logQ0_print = tt.printing.Print('logQ0')(logQ0)
-
             logdeltaQ = pm.Normal("logdeltaQ", mu=2.0, sd=10.0)
-            #logdeltaQ_print = tt.printing.Print('logdeltaQ')(logdeltaQ)
-
             mix = pm.Uniform("mix", lower=0, upper=1.0)
-            #mix_print = tt.printing.Print('mix')(mix)
 
             # Transit jitter & GP parameters
             logs2 = pm.Normal("logs2", mu=2*np.log(np.min(self.flux_err[mask])), sd=5.0)
-            #logs2_print = tt.printing.Print('logs2')(logs2)
 
             # Tracking planet parameters
             period = pm.Deterministic("period", tt.exp(logP))
@@ -373,6 +321,7 @@ class FindTransits(object):
             if pl is True:
                 light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=r_pl, t=self.time[mask], texp=0.021)
 
+            # Else, compute with r = 0 (no planet model)
             else:
                 light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=0, t=self.time[mask], texp=0.021)
 
@@ -396,6 +345,7 @@ class FindTransits(object):
             # a better solution by trying different combinations of parameters in turn
             if start is None:
                 start = GPmodel.test_point
+            # Optimize to find the maximum a posteriori parameters
             map_soln = xo.optimize(start=start, vars=[mean])
             map_soln = xo.optimize(start=map_soln, vars=[b])
             map_soln = xo.optimize(start=map_soln, vars=[logP, t0])
@@ -404,9 +354,6 @@ class FindTransits(object):
             map_soln = xo.optimize(start=map_soln, vars=[b])
             map_soln = xo.optimize(start=map_soln, vars=[ecc, omega])
             map_soln = xo.optimize(start=map_soln, vars=[mean])
-            #map_soln = xo.optimize(start=map_soln)
-
-            # Optimize to find the maximum a posteriori parameters
             map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
             map_soln = xo.optimize(start=map_soln, vars=[logamp])
             map_soln = xo.optimize(start=map_soln, vars=[logrotperiod])
@@ -414,7 +361,6 @@ class FindTransits(object):
             map_soln = xo.optimize(start=map_soln, vars=[mix])
             map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
             map_soln = xo.optimize(start=map_soln)
-            #map_soln = xo.optimize(start=start)
 
             #self.gp = gp
 
@@ -431,7 +377,6 @@ class FindTransits(object):
 
         ax = axes[0]
         ax.plot(self.time[mask], self.flux[mask], "k", label="data")
-        # gp_mod = soln["gp_pred"] + soln["mean"]
         gp_mod = soln["pred"] + soln["mean"]
         ax.plot(self.time[mask], gp_mod, color="C2", label="gp model")
         ax.legend(fontsize=10)
@@ -454,13 +399,9 @@ class FindTransits(object):
         ax.set_xlabel("time [days]")
 
         if pl is True:
-            #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             plt.savefig(fname='/home/earleyn/figures/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-            #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         else:
-            #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
             plt.savefig(fname='/home/earleyn/figures/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-            #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
 
         plt.close()
