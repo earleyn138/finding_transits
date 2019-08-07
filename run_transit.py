@@ -127,6 +127,7 @@ def save_models(directory, tic, deltaloglike_values, planet_results, planet_mode
 def run_script(file, tic, lc_dir, data_dir):
     '''Runs script
     '''
+    print('TIC: '+str(tic))
     # Loading in light curve
     time, norm_flux, norm_flux_err, cads = load_lc(file, lc_dir)
 
@@ -220,6 +221,7 @@ file_list = []
 for filename in os.listdir(lc_dir):
     res_tic = re.findall("_tic(\d+)_", filename)
     tic = int(res_tic[0])
+    #if tic == 183596242:
     tic_list.append(tic)
     file_list.append(filename)
 

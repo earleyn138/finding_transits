@@ -95,7 +95,7 @@ class FindTransits(object):
 
         power_tup = []
         for i, per in enumerate(period):
-            if per < rotper+1 and per > rotper-1:
+            if per < rotper+10 and per > 0:#rotper-1:
                 power_tup.append((i, per))
 
         fft_list = []
@@ -156,9 +156,9 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(neg_low_bound-0.1*max_period, pos_up_bound+0.1*max_period)
-        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        # #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.savefig(fname='/home/earleyn/figures/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        # #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         #Inverse fourier transform
@@ -169,9 +169,9 @@ class FindTransits(object):
         plt.plot(pflux)
         plt.xlabel('Cadences')
         plt.ylabel('Detrended Normalized Flux')
-        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        # #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.savefig(fname='/home/earleyn/figures/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        # #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         det_flux = []
@@ -233,9 +233,9 @@ class FindTransits(object):
         ax.set_xlabel("period [days]")
         ax.set_ylabel("log likelihood")
 
-        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        # #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.savefig(fname='/home/earleyn/figures/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        # #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
 
@@ -268,9 +268,9 @@ class FindTransits(object):
         ax.set_xlabel("time since transit [days]")
         ax.set_ylabel("de-trended flux")
 
-        #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        # #plt.savefig(fname='/data/wallaby/earleyn/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.savefig(fname='/home/earleyn/figures/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
-        #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        # #plt.savefig(fname='/Users/nicholasearley/TESS_data/young_bois_figs/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
 
@@ -280,6 +280,13 @@ class FindTransits(object):
 
         # Find rotation period
         rotper, ls_results = self.find_rotper(self.time, self.flux)
+
+        # print('logP initial guess- bls period: '+str(self.bls_period))
+        # print('t0 initial guess- bls t0: '+str(self.bls_t0))
+        # print('logr initial guess: '+str(0.5*np.log(np.array(self.bls_depth))+np.log(1.10)))
+        # print('logrotperiod initial guess: '+str(np.log(rotper)))
+        # print('logamp initial guess: '+str(np.log(np.var(self.flux[mask]))))
+        # print('logs2 initial guess: '+str(2*np.log(np.min(self.flux_err[mask]))))
 
         if mask is None:
             mask = np.ones(len(self.time), dtype=bool)
@@ -307,10 +314,13 @@ class FindTransits(object):
             t0 = pm.Normal("t0", mu=self.bls_t0, sd=1)
             #t0_print = tt.printing.Print('t0')(t0)
 
-            b = pm.Flat("b", transform=pm.distributions.transforms.logodds, testval=0.5)
+            #b = pm.Flat("b", transform=pm.distributions.transforms.logodds, testval=0.5)
+            b = pm.Uniform("b", lower=0, upper=0.9)
             #b_print = tt.printing.Print('b')(b)
 
-            logr = pm.Normal("logr", sd=1.0, mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]))
+            #logr = pm.Normal("logr", sd=1.0, mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]))
+            BoundedNormal_logr = pm.Bound(pm.Normal, lower=-5, upper=0)
+            logr = BoundedNormal_logr('logr', mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]), sd=1.0)
             #logr_print = tt.printing.Print('logr')(logr)
 
             r_pl = pm.Deterministic("r_pl", tt.exp(logr))
@@ -394,7 +404,7 @@ class FindTransits(object):
             map_soln = xo.optimize(start=map_soln, vars=[b])
             map_soln = xo.optimize(start=map_soln, vars=[ecc, omega])
             map_soln = xo.optimize(start=map_soln, vars=[mean])
-            map_soln = xo.optimize(start=map_soln)
+            #map_soln = xo.optimize(start=map_soln)
 
             # Optimize to find the maximum a posteriori parameters
             map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
@@ -404,8 +414,9 @@ class FindTransits(object):
             map_soln = xo.optimize(start=map_soln, vars=[mix])
             map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
             map_soln = xo.optimize(start=map_soln)
+            #map_soln = xo.optimize(start=start)
 
-            self.gp = gp
+            #self.gp = gp
 
         return GPmodel, map_soln
 
