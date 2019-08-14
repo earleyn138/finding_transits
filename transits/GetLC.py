@@ -83,11 +83,13 @@ class GetLC(object):
 
             for reg in regions:
                 f          = flux[reg]
-                norm_flux  = np.append(f/np.nanmedian(f), norm_flux)
-                time       = np.append(t[reg], time)
-                e          = err[reg]
-                norm_flux_err = np.append(e/np.nanmedian(f), norm_flux_err)
-                cadences   = np.append(cads[reg], cadences)
+                if np.nanmedian(f) > 0:
+                    norm_flux  = np.append(f/np.nanmedian(f), norm_flux)
+                    time       = np.append(t[reg], time)
+                    e          = err[reg]
+                    norm_flux_err = np.append(e/np.nanmedian(f), norm_flux_err)
+                    cadences   = np.append(cads[reg], cadences)
+
             return time, norm_flux, norm_flux_err, cadences
 
 
@@ -122,6 +124,8 @@ class GetLC(object):
             self.norm_flux_err  = sector_e
             self.cadences  = sector_c
 
-        self.time, self.norm_flux, self.norm_flux_err = zip(*sorted(zip(self.time, self.norm_flux, self.norm_flux_err)))
-        self.time, self.norm_flux, self.norm_flux_err = np.array(self.time), np.array(self.norm_flux), np.array(self.norm_flux_err)
-        self.cadences = np.sort(self.cadences)
+
+        if len(self.time) > 0:
+            self.time, self.norm_flux, self.norm_flux_err = zip(*sorted(zip(self.time, self.norm_flux, self.norm_flux_err)))
+            self.time, self.norm_flux, self.norm_flux_err = np.array(self.time), np.array(self.norm_flux), np.array(self.norm_flux_err)
+            self.cadences = np.sort(self.cadences)

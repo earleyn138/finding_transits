@@ -2,14 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import astropy.units as u
 from operator import itemgetter
-
 from bls import BLS
 import exoplanet as xo
-
 import pymc3 as pm
 import theano.tensor as tt
-import corner
-
 
 __all__ = ['FindTransits']
 
@@ -17,8 +13,9 @@ class FindTransits(object):
     '''Runs through the box-least-squares method to find transits and
     performs GP modeling'''
 
-    def __init__(self, time, flux, flux_err, cads, tic, run):
+    def __init__(self, fig_dir, time, flux, flux_err, cads, tic, run):
 
+        self.fig_dir = fig_dir
         self.time = time
         self.flux = flux
         self.flux_err = flux_err
@@ -56,12 +53,12 @@ class FindTransits(object):
         if flux is self.flux:
             plt.title('The rotation period from Lomb-Scargle is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            plt.savefig(fname='/home/earleyn/figures/raw_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='{}/raw_lombscarg_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
 
         elif flux is self.det_flux:
             plt.title('The rotation period after detrending is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            plt.savefig(fname='/home/earleyn/figures/det_lombscarg_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='{}/det_lombscarg_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
 
         plt.close()
 
@@ -104,7 +101,7 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(-1.1*max_period, 1.1*max_period)
-        plt.savefig(fname='/home/earleyn/figures/fft_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='{}/fft_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         #Signal processing: Top hat filter
@@ -149,7 +146,7 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(neg_low_bound-0.1*max_period, pos_up_bound+0.1*max_period)
-        plt.savefig(fname='/home/earleyn/figures/notch_filter_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='{}/notch_filter_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         #Inverse fourier transform
@@ -160,7 +157,7 @@ class FindTransits(object):
         plt.plot(pflux)
         plt.xlabel('Cadences')
         plt.ylabel('Detrended Normalized Flux')
-        plt.savefig(fname='/home/earleyn/figures/det_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='{}/det_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         det_flux = []
@@ -222,7 +219,7 @@ class FindTransits(object):
         ax.set_xlabel("period [days]")
         ax.set_ylabel("log likelihood")
 
-        plt.savefig(fname='/home/earleyn/figures/bls_pgram_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='{}/bls_pgram_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
 
@@ -255,7 +252,7 @@ class FindTransits(object):
         ax.set_xlabel("time since transit [days]")
         ax.set_ylabel("de-trended flux")
 
-        plt.savefig(fname='/home/earleyn/figures/box_plot_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+        plt.savefig(fname='{}/box_plot_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
 
@@ -399,9 +396,9 @@ class FindTransits(object):
         ax.set_xlabel("time [days]")
 
         if pl is True:
-            plt.savefig(fname='/home/earleyn/figures/GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='{}/GPmodel_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
 
         else:
-            plt.savefig(fname='/home/earleyn/figures/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.tic, self.run), dpi=250, format='pdf')
+            plt.savefig(fname='{}/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
 
         plt.close()
