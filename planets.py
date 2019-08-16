@@ -1,6 +1,7 @@
 import glob
+import sys
 
-directory = '/Users/nicholasearley/TESS_data/columba/vetting/figs/'
+directory = sys.argv[1] # for example: /Users/nicholasearley/TESS_data/columba/figures/
 
 def repeat(tics):
     length = len(tics)

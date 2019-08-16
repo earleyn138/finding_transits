@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import astropy.units as u
 from operator import itemgetter
 from bls import BLS
 import exoplanet as xo
@@ -13,7 +12,7 @@ class FindTransits(object):
     '''Runs through the box-least-squares method to find transits and
     performs GP modeling'''
 
-    def __init__(self, fig_dir, time, flux, flux_err, cads, tic, run):
+    def __init__(self, fig_dir, time, flux, flux_err, cads, tic, run, vet=False, vet_dir ='.'):
 
         self.fig_dir = fig_dir
         self.time = time
@@ -22,6 +21,8 @@ class FindTransits(object):
         self.cads = cads
         self.tic = tic
         self.run = run
+        self.vet = vet
+        self.vet_dir = vet_dir
 
         self.find_rotper(time, flux)
         self.make_lombscarg(time, flux)
@@ -53,12 +54,14 @@ class FindTransits(object):
         if flux is self.flux:
             plt.title('The rotation period from Lomb-Scargle is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            plt.savefig(fname='{}/raw_lombscarg_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+            if self.vet == False:
+                plt.savefig(fname='{}/raw_lombscarg_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
 
         elif flux is self.det_flux:
             plt.title('The rotation period after detrending is {}'.format(rotper))
             plt.xlabel('log10(period)')
-            plt.savefig(fname='{}/det_lombscarg_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+            if self.vet == False:
+                plt.savefig(fname='{}/det_lombscarg_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
 
         plt.close()
 
@@ -101,7 +104,9 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(-1.1*max_period, 1.1*max_period)
-        plt.savefig(fname='{}/fft_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+        if self.vet == False:
+            plt.savefig(fname='{}/fft_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+
         plt.close()
 
         #Signal processing: Top hat filter
@@ -146,7 +151,8 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(neg_low_bound-0.1*max_period, pos_up_bound+0.1*max_period)
-        plt.savefig(fname='{}/notch_filter_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+        if self.vet == False:
+            plt.savefig(fname='{}/notch_filter_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         #Inverse fourier transform
@@ -157,7 +163,8 @@ class FindTransits(object):
         plt.plot(pflux)
         plt.xlabel('Cadences')
         plt.ylabel('Detrended Normalized Flux')
-        plt.savefig(fname='{}/det_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+        if self.vet == False:
+            plt.savefig(fname='{}/det_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
         det_flux = []
@@ -219,7 +226,8 @@ class FindTransits(object):
         ax.set_xlabel("period [days]")
         ax.set_ylabel("log likelihood")
 
-        plt.savefig(fname='{}/bls_pgram_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+        if self.vet == False:
+            plt.savefig(fname='{}/bls_pgram_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
 
@@ -252,7 +260,8 @@ class FindTransits(object):
         ax.set_xlabel("time since transit [days]")
         ax.set_ylabel("de-trended flux")
 
-        plt.savefig(fname='{}/box_plot_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+        if self.vet == False:
+            plt.savefig(fname='{}/box_plot_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
 
 
@@ -277,23 +286,62 @@ class FindTransits(object):
             M_star_huang = 1.094, 0.039
             R_star_huang = 1.10, 0.023
             BoundedNormal = pm.Bound(pm.Normal, lower=0, upper=3)
-            m_star = BoundedNormal("m_star", mu=M_star_huang[0], sd=M_star_huang[1])
-            r_star = BoundedNormal("r_star", mu=R_star_huang[0], sd=R_star_huang[1])
 
-            # Orbital parameters for the planets
-            logP = pm.Normal("logP", mu=np.log(self.bls_period), sd=1)
-            t0 = pm.Normal("t0", mu=self.bls_t0, sd=1)
-            b = pm.Uniform("b", lower=0, upper=0.9)
-            BoundedNormal_logr = pm.Bound(pm.Normal, lower=-5, upper=0)
-            logr = BoundedNormal_logr('logr', mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]), sd=1.0)
-            r_pl = pm.Deterministic("r_pl", tt.exp(logr))
-            ror = pm.Deterministic("ror", r_pl / r_star)
+            if self.vet == False:
+                # Orbital parameters for the planets
+                logP = pm.Normal("logP", mu=np.log(self.bls_period), sd=1)
+                t0 = pm.Normal("t0", mu=self.bls_t0, sd=1)
+                # Tracking planet parameters
+                period = pm.Deterministic("period", tt.exp(logP))
+                m_star = BoundedNormal("m_star", mu=M_star_huang[0], sd=M_star_huang[1])
+                r_star = BoundedNormal("r_star", mu=R_star_huang[0], sd=R_star_huang[1])
+                b = pm.Uniform("b", lower=0, upper=0.9)
+                BoundedNormal_logr = pm.Bound(pm.Normal, lower=-5, upper=0)
+                logr = BoundedNormal_logr('logr', mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]), sd=1.0)
+                r_pl = pm.Deterministic("r_pl", tt.exp(logr))
+                ror = pm.Deterministic("ror", r_pl / r_star)
 
-            # This is the eccentricity prior from Kipping (2013):
-            # https://arxiv.org/abs/1306.4982
-            BoundedBeta = pm.Bound(pm.Beta, lower=0, upper=1-1e-5)
-            ecc = BoundedBeta("ecc", alpha=0.867, beta=3.03, testval=0.1)
-            omega = xo.distributions.Angle("omega")
+                # This is the eccentricity prior from Kipping (2013):
+                # https://arxiv.org/abs/1306.4982
+                BoundedBeta = pm.Bound(pm.Beta, lower=0, upper=1-1e-5)
+                ecc = BoundedBeta("ecc", alpha=0.867, beta=3.03, testval=0.1)
+                omega = xo.distributions.Angle("omega")
+
+            # Even-Odd Test
+            else:
+                logP_even = pm.Normal("logP_even", mu=np.log(2*self.bls_period), sd=1)
+                t0_even = pm.Normal("t0_even", mu=self.bls_t0, sd=1)
+                period_even = pm.Deterministic("period_even", tt.exp(logP_even))
+                m_star_even = BoundedNormal("m_star_even", mu=M_star_huang[0], sd=M_star_huang[1])
+                r_star_even = BoundedNormal("r_star_even", mu=R_star_huang[0], sd=R_star_huang[1])
+                b_even = pm.Uniform("b_even", lower=0, upper=0.9)
+                BoundedNormal_logr_even = pm.Bound(pm.Normal, lower=-5, upper=0)
+                logr_even = BoundedNormal_logr_even('logr_even', mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]), sd=1.0)
+                r_pl_even = pm.Deterministic("r_pl_even", tt.exp(logr_even))
+                ror_even = pm.Deterministic("ror_even", r_pl_even / r_star_even)
+                # This is the eccentricity prior from Kipping (2013):
+                # https://arxiv.org/abs/1306.4982
+                BoundedBeta_even = pm.Bound(pm.Beta, lower=0, upper=1-1e-5)
+                ecc_even = BoundedBeta_even("ecc_even", alpha=0.867, beta=3.03, testval=0.1)
+                omega_even = xo.distributions.Angle("omega_even")
+
+
+                logP_odd = pm.Normal("logP_odd", mu=np.log(2*self.bls_period), sd=1)
+                t0_odd = pm.Normal("t0_odd", mu=self.bls_period+self.bls_t0, sd=1)
+                period_odd = pm.Deterministic("period_odd", tt.exp(logP_odd))
+                m_star_odd = BoundedNormal("m_star_odd", mu=M_star_huang[0], sd=M_star_huang[1])
+                r_star_odd = BoundedNormal("r_star_odd", mu=R_star_huang[0], sd=R_star_huang[1])
+                b_odd = pm.Uniform("b_odd", lower=0, upper=0.9)
+                BoundedNormal_logr_odd = pm.Bound(pm.Normal, lower=-5, upper=0)
+                logr_odd = BoundedNormal_logr_odd('logr_odd', mu=0.5*np.log(np.array(self.bls_depth))+np.log(R_star_huang[0]), sd=1.0)
+                r_pl_odd = pm.Deterministic("r_pl_odd", tt.exp(logr_odd))
+                ror_odd = pm.Deterministic("ror_odd", r_pl_odd / r_star_odd)
+                # This is the eccentricity prior from Kipping (2013):
+                # https://arxiv.org/abs/1306.4982
+                BoundedBeta_odd = pm.Bound(pm.Beta, lower=0, upper=1-1e-5)
+                ecc_odd = BoundedBeta_odd("ecc_odd", alpha=0.867, beta=3.03, testval=0.1)
+                omega_odd = xo.distributions.Angle("omega_odd")
+
 
             # The parameters of the RotationTerm kernel
             logamp = pm.Normal("logamp", mu=np.log(np.var(self.flux[mask])), sd=5.0)
@@ -305,59 +353,110 @@ class FindTransits(object):
             # Transit jitter & GP parameters
             logs2 = pm.Normal("logs2", mu=2*np.log(np.min(self.flux_err[mask])), sd=5.0)
 
-            # Tracking planet parameters
-            period = pm.Deterministic("period", tt.exp(logP))
-
             # Track the rotation period as a deterministic
             rotperiod = pm.Deterministic("rotation_period", tt.exp(logrotperiod))
-
-            # Orbit model
-            orbit = xo.orbits.KeplerianOrbit(r_star=r_star, m_star=m_star, period=period, t0=t0, b=b, ecc=ecc, omega=omega)
-
-            # Compute the model light curve using starry, r = r_pl
-            if pl is True:
-                light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=r_pl, t=self.time[mask], texp=0.021)
-
-            # Else, compute with r = 0 (no planet model)
-            else:
-                light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=0, t=self.time[mask], texp=0.021)
-
-            light_curve = pm.math.sum(light_curves, axis=-1)
-            pm.Deterministic("light_curves", light_curves)
 
             # GP model for the light curve
             kernel = xo.gp.terms.RotationTerm(log_amp=logamp, period=rotperiod, log_Q0=logQ0, log_deltaQ=logdeltaQ, mix=mix)
             gp = xo.gp.GP(kernel, self.time[mask], ((self.flux_err[mask])**2 + tt.exp(logs2)), J=4)
 
-            # Compute the Gaussian Process likelihood and add it into the
-            # the PyMC3 model as a "potential"
-            pm.Potential("loglike", gp.log_likelihood(self.flux[mask] - mean - light_curve))
 
-            # Compute the mean model prediction for plotting purposes
-            pm.Deterministic("pred", gp.predict())
-            pm.Deterministic("loglikelihood", gp.log_likelihood(self.flux[mask] - mean - light_curve))
+            if self.vet == False:
+                # Orbit model
+                orbit = xo.orbits.KeplerianOrbit(r_star=r_star, m_star=m_star, period=period, t0=t0, b=b, ecc=ecc, omega=omega)
+                if pl is True: #r = r_pl
+                    # Compute the model light curve using starry
+                    light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=r_pl, t=self.time[mask], texp=0.021)
+                else: #r = 0 (no planet model)
+                    light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=0, t=self.time[mask], texp=0.021)
+
+                light_curve = pm.math.sum(light_curves, axis=-1)
+                pm.Deterministic("light_curves", light_curves)
+
+                # Compute the Gaussian Process likelihood and add it into the
+                # the PyMC3 model as a "potential"
+                pm.Potential("loglike", gp.log_likelihood(self.flux[mask] - mean - light_curve))
+
+                # Compute the mean model prediction for plotting purposes
+                pm.Deterministic("pred", gp.predict())
+                pm.Deterministic("loglikelihood", gp.log_likelihood(self.flux[mask] - mean - light_curve))
+
+                # Fit for the maximum a posteriori parameters, I've found that I can get
+                # a better solution by trying different combinations of parameters in turn
+                if start is None:
+                    start = GPmodel.test_point
+                # Optimize to find the maximum a posteriori parameters
+                map_soln = xo.optimize(start=start, vars=[mean])
+                map_soln = xo.optimize(start=map_soln, vars=[b])
+                map_soln = xo.optimize(start=map_soln, vars=[logP, t0])
+                map_soln = xo.optimize(start=map_soln, vars=[u_star])
+                map_soln = xo.optimize(start=map_soln, vars=[logr])
+                map_soln = xo.optimize(start=map_soln, vars=[b])
+                map_soln = xo.optimize(start=map_soln, vars=[ecc, omega])
+                map_soln = xo.optimize(start=map_soln, vars=[mean])
+                map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
+                map_soln = xo.optimize(start=map_soln, vars=[logamp])
+                map_soln = xo.optimize(start=map_soln, vars=[logrotperiod])
+                map_soln = xo.optimize(start=map_soln, vars=[mean])
+                map_soln = xo.optimize(start=map_soln, vars=[mix])
+                map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
+                map_soln = xo.optimize(start=map_soln)
 
 
-            # Fit for the maximum a posteriori parameters, I've found that I can get
-            # a better solution by trying different combinations of parameters in turn
-            if start is None:
-                start = GPmodel.test_point
-            # Optimize to find the maximum a posteriori parameters
-            map_soln = xo.optimize(start=start, vars=[mean])
-            map_soln = xo.optimize(start=map_soln, vars=[b])
-            map_soln = xo.optimize(start=map_soln, vars=[logP, t0])
-            map_soln = xo.optimize(start=map_soln, vars=[u_star])
-            map_soln = xo.optimize(start=map_soln, vars=[logr])
-            map_soln = xo.optimize(start=map_soln, vars=[b])
-            map_soln = xo.optimize(start=map_soln, vars=[ecc, omega])
-            map_soln = xo.optimize(start=map_soln, vars=[mean])
-            map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
-            map_soln = xo.optimize(start=map_soln, vars=[logamp])
-            map_soln = xo.optimize(start=map_soln, vars=[logrotperiod])
-            map_soln = xo.optimize(start=map_soln, vars=[mean])
-            map_soln = xo.optimize(start=map_soln, vars=[mix])
-            map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
-            map_soln = xo.optimize(start=map_soln)
+            else:
+                orbit_even = xo.orbits.KeplerianOrbit(r_star=r_star_even, m_star=m_star_even, period=period_even, t0=t0_even, b=b_even, ecc=ecc_even, omega=omega_even)
+
+                orbit_odd = xo.orbits.KeplerianOrbit(r_star=r_star_odd, m_star=m_star_odd, period=period_odd, t0=t0_odd, b=b_odd, ecc=ecc_odd, omega=omega_odd)
+
+                if pl is True: #r = r_pl
+                    # Compute the model light curve using starry
+                    light_curves_even = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit_even, r=r_pl_even, t=self.time[mask], texp=0.021)
+                    light_curves_odd = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit_odd, r=r_pl_odd, t=self.time[mask], texp=0.021)
+
+                else: #r = 0 (no planet model)
+                    light_curves_even = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit_even, r=0, t=self.time[mask], texp=0.021)
+                    light_curves_odd = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit_odd, r=0, t=self.time[mask], texp=0.021)
+
+                light_curve_even = pm.math.sum(light_curves_even, axis=-1)
+                light_curve_odd = pm.math.sum(light_curves_odd, axis=-1)
+
+                pm.Deterministic("light_curves_even", light_curves_even)
+                pm.Deterministic("light_curves_odd", light_curves_odd)
+
+                # Compute the Gaussian Process likelihood and add it into the
+                # the PyMC3 model as a "potential"
+                pm.Potential("loglike", gp.log_likelihood(self.flux[mask] - mean - (light_curve_even + light_curve_odd)))
+
+                # Compute the mean model prediction for plotting purposes
+                pm.Deterministic("pred", gp.predict())
+                pm.Deterministic("loglikelihood", gp.log_likelihood(self.flux[mask] - mean - (light_curve_even + light_curve_odd)))
+
+
+                # Fit for the maximum a posteriori parameters, I've found that I can get
+                # a better solution by trying different combinations of parameters in turn
+                if start is None:
+                    start = GPmodel.test_point
+                # Optimize to find the maximum a posteriori parameters
+                map_soln = xo.optimize(start=start, vars=[mean])
+                map_soln = xo.optimize(start=map_soln, vars=[b_even])
+                map_soln = xo.optimize(start=map_soln, vars=[b_odd])
+                map_soln = xo.optimize(start=map_soln, vars=[logP_even, t0_even])
+                map_soln = xo.optimize(start=map_soln, vars=[logP_odd, t0_odd])
+                map_soln = xo.optimize(start=map_soln, vars=[u_star])
+                map_soln = xo.optimize(start=map_soln, vars=[logr_even])
+                map_soln = xo.optimize(start=map_soln, vars=[logr_odd])
+                map_soln = xo.optimize(start=map_soln, vars=[b_even])
+                map_soln = xo.optimize(start=map_soln, vars=[b_odd])
+                map_soln = xo.optimize(start=map_soln, vars=[ecc_even, omega_even])
+                map_soln = xo.optimize(start=map_soln, vars=[ecc_odd, omega_odd])
+                map_soln = xo.optimize(start=map_soln, vars=[mean])
+                map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
+                map_soln = xo.optimize(start=map_soln, vars=[logamp])
+                map_soln = xo.optimize(start=map_soln, vars=[logrotperiod])
+                map_soln = xo.optimize(start=map_soln, vars=[mean])
+                map_soln = xo.optimize(start=map_soln, vars=[mix])
+                map_soln = xo.optimize(start=map_soln, vars=[logs2, logQ0, logdeltaQ])
+                map_soln = xo.optimize(start=map_soln)
 
             #self.gp = gp
 
@@ -372,33 +471,64 @@ class FindTransits(object):
 
         fig, axes = plt.subplots(3, 1, figsize=(10, 7), sharex=True)
 
-        ax = axes[0]
-        ax.plot(self.time[mask], self.flux[mask], "k", label="data")
-        gp_mod = soln["pred"] + soln["mean"]
-        ax.plot(self.time[mask], gp_mod, color="C2", label="gp model")
-        ax.legend(fontsize=10)
-        ax.set_ylabel("relative flux")
+        if self.vet == False:
+            ax = axes[0]
+            ax.plot(self.time[mask], self.flux[mask], "k", label="data")
+            gp_mod = soln["pred"] + soln["mean"]
+            ax.plot(self.time[mask], gp_mod, color="C2", label="gp model")
+            ax.legend(fontsize=10)
+            ax.set_ylabel("relative flux")
 
-        ax = axes[1]
-        ax.plot(self.time[mask], self.flux[mask] - gp_mod, "k", label="de-trended data")
-        for i, l in enumerate("b"):
-            mod = soln["light_curves"][:, i]
-            ax.plot(self.time[mask], mod, label="planet {0}".format(l))
-        ax.legend(fontsize=10, loc=3)
-        ax.set_ylabel("de-trended flux")
+            ax = axes[1]
+            ax.plot(self.time[mask], self.flux[mask] - gp_mod, "k", label="de-trended data")
+            for i, l in enumerate("b"):
+                mod = soln["light_curves"][:, i]
+                ax.plot(self.time[mask], mod, label="planet {0}".format(l))
+            ax.legend(fontsize=10, loc=3)
+            ax.set_ylabel("de-trended flux")
 
-        ax = axes[2]
-        mod = gp_mod + np.sum(soln["light_curves"], axis=-1)
-        ax.plot(self.time[mask], self.flux[mask] - mod, "k")
-        ax.axhline(0, color="#aaaaaa", lw=1)
-        ax.set_ylabel("residuals")
-        ax.set_xlim(self.time[mask].min(), self.time[mask].max())
-        ax.set_xlabel("time [days]")
+            ax = axes[2]
+            mod = gp_mod + np.sum(soln["light_curves"], axis=-1)
+            ax.plot(self.time[mask], self.flux[mask] - mod, "k")
+            ax.axhline(0, color="#aaaaaa", lw=1)
+            ax.set_ylabel("residuals")
+            ax.set_xlim(self.time[mask].min(), self.time[mask].max())
+            ax.set_xlabel("time [days]")
 
-        if pl is True:
-            plt.savefig(fname='{}/GPmodel_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+            if pl is True:
+                plt.savefig(fname='{}/GPmodel_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+            else:
+                plt.savefig(fname='{}/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
 
-        else:
-            plt.savefig(fname='{}/no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
 
+        elif self.vet == True:
+            ax = axes[0]
+            ax.plot(self.time[mask], self.flux[mask], "k", label="data")
+            gp_mod = soln["pred"] + soln["mean"]
+            ax.plot(self.time[mask], gp_mod, color="C2", label="gp model")
+            ax.legend(fontsize=10)
+            ax.set_ylabel("relative flux")
+
+            ax = axes[1]
+            ax.plot(self.time[mask], self.flux[mask] - gp_mod, "k", label="de-trended data")
+            for i, l in enumerate("b"):
+                mod_even = soln["light_curves_even"][:, i]
+                mod_odd = soln["light_curves_odd"][:, i]
+                ax.plot(self.time[mask], mod_even, label="even", color='r')
+                ax.plot(self.time[mask], mod_odd, label="odd", color='b')
+            ax.legend(fontsize=10, loc=3)
+            ax.set_ylabel("de-trended flux")
+
+            ax = axes[2]
+            mod = gp_mod + (np.sum(soln["light_curves_even"], axis=-1) + np.sum(soln["light_curves_odd"], axis=-1))
+            ax.plot(self.time[mask], self.flux[mask] - mod, "k")
+            ax.axhline(0, color="#aaaaaa", lw=1)
+            ax.set_ylabel("residuals")
+            ax.set_xlim(self.time[mask].min(), self.time[mask].max())
+            ax.set_xlabel("time [days]")
+
+            if pl is True:
+                plt.savefig(fname='{}/vet_GPmodel_lc_tic{:d}_run{:d}'.format(self.vet_dir, self.tic, self.run), dpi=250, format='pdf')
+            else:
+                plt.savefig(fname='{}/vet_no_pl_GPmodel_lc_tic{:d}_run{:d}'.format(self.vet_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
