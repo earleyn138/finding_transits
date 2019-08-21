@@ -42,8 +42,9 @@ def get_tics(lc_dir):
     return all_tics
 
 path = sys.argv[1]
+do_even_odd = 'False'
 lc_dir = path+'lc'
 all_tics = get_tics(lc_dir)
 
 for tic in all_tics:
-    os.system('python short_run.py '+str(tic)+' '+path)
+    os.system('python short_run.py '+str(tic)+' '+path+' '+do_even_odd)

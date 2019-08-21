@@ -11,7 +11,7 @@ import transits
 rel_tic = int(sys.argv[1])
 print('TIC: '+str(rel_tic))
 path = sys.argv[2]
-do_even_odd = False
+do_even_odd = sys.argv[3]
 
 lc_dir = '{}lc'.format(path)
 data_dir = '{}data'.format(path)
@@ -125,7 +125,7 @@ def save_data(data_dir, tic, x_values, y_values, yerr_values, cad_values, vet=Fa
 
 
 
-def save_models(data_dir, tic, deltaloglike_values, planet_solns, no_pl_solns, planet_outmasks, vet=False, vet_dir='.'):
+def save_models(data_dir, tic, planet_results, deltaloglike_values, planet_solns, no_pl_solns, planet_outmasks, vet=False, vet_dir='.'):
     '''Saves data from modeling #with pickle#
     '''
     model = {}
@@ -278,7 +278,7 @@ def get_results(tic, time, norm_flux, norm_flux_err, cads, data_dir, fig_dir, ve
         result.plot_box()
 
     save_data(data_dir, tic, x_values, y_values, yerr_values, cad_values, vet, vet_dir)
-    save_models(data_dir, tic, deltaloglike_values, planet_solns, no_pl_solns, planet_outmasks, vet, vet_dir)
+    save_models(data_dir, tic, planet_results, deltaloglike_values, planet_solns, no_pl_solns, planet_outmasks, vet, vet_dir)
 
 
 

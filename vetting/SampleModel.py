@@ -1,3 +1,4 @@
+import theano.tensor as tt
 import pymc3 as pm
 import numpy as np
 import exoplanet as xo
@@ -10,15 +11,16 @@ __all__ = ['SampleModel']
 class SampleModel(object):
     ''' sampling'''
 
-    def __init__(self, time, flux, flux_err, masks, soln, even_odd):
+    def __init__(self, time, flux, flux_err, mask, soln, do_even_odd):
 
         self.time = time
         self.flux = flux
         self.flux_err = flux_err
-        self.masks = masks
+        self.mask = mask
         self.soln = soln
-        self.even_odd = even_odd
+        self.do_even_odd = do_even_odd
 
+        self.recreate_mod()
         self.sample_mod()
 
 
@@ -31,7 +33,7 @@ class SampleModel(object):
             mean = self.soln['mean']
             u_star = self.soln['u_star']
 
-            if self.vet == False:
+            if self.do_even_odd == False:
                 logP = self.soln['logP']
                 t0 = self.soln['t0']
                 period = self.soln['period']
@@ -87,10 +89,10 @@ class SampleModel(object):
             gp = xo.gp.GP(kernel, self.time[self.mask], ((self.flux_err[self.mask])**2 + tt.exp(logs2)), J=4)
 
 
-            if self.vet == False:
+            if self.do_even_odd == False:
                 # Orbit model
                 orbit = xo.orbits.KeplerianOrbit(r_star=r_star, m_star=m_star, period=period, t0=t0, b=b, ecc=ecc, omega=omega)
-                light_curves = self.soln['light_curves']
+                light_curves = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit, r=r_pl, t=self.time[self.mask], texp=0.021)
 
                 light_curve = pm.math.sum(light_curves, axis=-1)
                 pm.Deterministic("light_curves", light_curves)
@@ -104,15 +106,13 @@ class SampleModel(object):
                 pm.Deterministic("loglikelihood", gp.log_likelihood(self.flux[self.mask] - mean - light_curve))
 
 
-
-
             else:
                 orbit_even = xo.orbits.KeplerianOrbit(r_star=r_star_even, m_star=m_star_even, period=period_even, t0=t0_even, b=b_even, ecc=ecc_even, omega=omega_even)
 
                 orbit_odd = xo.orbits.KeplerianOrbit(r_star=r_star_odd, m_star=m_star_odd, period=period_odd, t0=t0_odd, b=b_odd, ecc=ecc_odd, omega=omega_odd)
 
-                light_curves_even = self.soln['light_curves_even']
-                light_curves_odd = self.soln['light_curves_odd']
+                light_curves_even = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit_even, r=r_pl_even, t=self.time[self.mask], texp=0.021)
+                light_curves_odd = xo.StarryLightCurve(u_star).get_light_curve(orbit=orbit_odd, r=r_pl_odd, t=self.time[self.mask], texp=0.021)
 
                 light_curve_even = pm.math.sum(light_curves_even, axis=-1)
                 light_curve_odd = pm.math.sum(light_curves_odd, axis=-1)
@@ -142,10 +142,10 @@ class SampleModel(object):
             self.trace = sampler.sample(draws=2000)
 
 
-    # def assess_conv(self, even_odd):
+    # def assess_conv(self, do_even_odd):
     #     '''
     #     '''
-    #     if even_odd == False:
+    #     if do_even_odd == False:
     #         pm.summary(self.trace, varnames=["logamp", "logQ0", "logdeltaQ", "mix", "logs2", "omega", "ecc", "r_pl", "b", "t0", "logP", "r_star", "m_star", "u_star", "mean", "logrotperiod"])
     #     else:
     #         pm.summary(self.trace, varnames=["logamp", "logQ0", "logdeltaQ", "mix", "logs2", "mean", "u_star", "logrotperiod", "omega_even", "ecc_even", "r_pl_even", "b_even", "t0_even", "logP_even", "r_star_even", "m_star_even", "omega_odd", "ecc_odd", "r_pl_odd", "b_odd", "t0_odd", "logP_odd", "r_star_odd", "m_star_odd" ])

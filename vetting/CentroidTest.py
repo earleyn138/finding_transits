@@ -9,13 +9,12 @@ __all__ = ['CentroidTest']
 class CentroidTest(object):
     """docstring for ."""
 
-    def __init__(self, time, x_cent, y_cent, path, run, polyorder):
+    def __init__(self, time, x_cent, y_cent, path, polyorder):
 
         self.time = time
         self.x_cent = x_cent
         self.y_cent = y_cent
         self.path = path
-        self.run = run
         self.polyorder = polyorder
 
         self.find_trns()
@@ -34,7 +33,7 @@ class CentroidTest(object):
         self.y_cent_trns_list = []
 
         for run in range(len(model['Run'])-1):
-            cents = vetting.CentroidShift(self.time, self.x_cent, self.y_cent, self.path, self.run)
+            cents = vetting.CentroidShift(self.time, self.x_cent, self.y_cent, self.path, run)
             self.time_trns_list.append(cents.time_trns)
             self.x_cent_trns_list.append(cents.x_cent_trns)
             self.y_cent_trns_list.append(cents.y_cent_trns)
