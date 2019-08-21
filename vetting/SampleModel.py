@@ -192,4 +192,4 @@ class SampleModel(object):
     #     # Convert the radius to Earth radii
     #     samples["r_pl"] = (np.array(samples["r_pl"]) * u.R_sun).to(u.R_earth).value
     #
-    #     corner.corner(samples[["period", "r_pl", "b", "ecc"]], labels=["period [days]", "radius [Earth radii]", "impact param", "eccentricity"]);
+    #     corner.corner(samples[["period", "r_pl", "b", "ecc"]], labels=["period [days]", "radius [Earth radii]", "impact param", "eccentricity"])
