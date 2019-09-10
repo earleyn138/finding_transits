@@ -1,28 +1,62 @@
 import eleanor
-#import os
+import sys
+import os
 #import re
 import csv
 
-#Columba
+project_dir = sys.argv[1]
+txt_file = sys.argv[2]
+RA_col = int(sys.argv[3])
+DEC_col = int(sys.argv[4])
+file = project_dir+txt_file
+lc_dir = project_dir+'lc'
+
+
+# ra = []
+# dec = []
+# with open(file, 'r') as f:
+#     reader = csv.reader(f)
+#     next(reader)
+#     for row in reader:
+#         RA = row[1]
+#         DEC = row[2]
+#         ra.append(float(RA))
+#         dec.append(float(DEC))
+#
+# for (r, d) in zip(ra, dec):
+#     try:
+#         star = eleanor.multi_sectors(coords=(r,d), sectors='all', tc=True)
+#         for s in star:
+#             data = eleanor.TargetData(s)
+#             data.save(directory=lc_dir)
+#     except:
+#         pass
+
+
+
+
+# Psi-Eri
 ra = []
 dec = []
-with open('/home/earleyn/columba/Columba.txt', 'r') as f:
+with open(file, 'r') as f:
     reader = csv.reader(f)
-    next(reader)
+    #next(reader)
     for row in reader:
-        RA = row[1]
-        DEC = row[2]
+        RA = row[RA_col]
+        DEC = row[DEC_col]
         ra.append(float(RA))
         dec.append(float(DEC))
 
 for (r, d) in zip(ra, dec):
+    print(r,d)
     try:
         star = eleanor.multi_sectors(coords=(r,d), sectors='all', tc=True)
         for s in star:
             data = eleanor.TargetData(s)
-            data.save(directory='/home/earleyn/columba/lc')
+            data.save(directory=lc_dir)
     except:
         pass
+
 
 
 '''#young_bois

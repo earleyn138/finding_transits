@@ -8,23 +8,42 @@ __all__ = ['GetLC']
 
 class GetLC(object):
     'Uses Stella code to remove gaps in light curve and normalize data'
+    # Using filenames
+    def __init__(self, fn=None, fn_dir=None, tic=None, use_files=True, do_corr=True, do_raw= False, do_psf=False):
 
-    def __init__(self, fn=None, fn_dir=None):
-        if fn_dir is None:
-            self.directory = '.'
+        self.use_files = use_files
+
+        if self.use_files == True:
+            if fn_dir is None:
+                self.directory = '.'
+            else:
+                self.directory = fn_dir
+
+            self.file = fn
+            self.do_corr = do_corr
+            self.do_raw = do_raw
+            self.do_psf = do_psf
+
+            if (type(fn) == list) or (type(fn) == np.ndarray):
+                if len(fn) > 1:
+                    self.multi = True
+                else:
+                    self.multi = False
+                    self.file  = fn[0]
+            else:
+                self.multi = False
+
         else:
-            self.directory = fn_dir
+            self.tic = tic
+            self.do_corr = do_corr
+            self.do_raw = do_raw
+            self.do_psf = do_psf
 
-        self.file = fn
-
-        if (type(fn) == list) or (type(fn) == np.ndarray):
-            if len(fn) > 1:
+            self.star_results = eleanor.multi_sectors(tic=self.tic, sectors='all', tc=True)
+            if len(self.star_results) > 1:
                 self.multi = True
             else:
                 self.multi = False
-                self.file  = fn[0]
-        else:
-            self.multi = False
 
         self.load_data()
         self.normalize_lc()
@@ -33,27 +52,50 @@ class GetLC(object):
     def load_data(self):
         """Allows for the option to pass in multiple files.
         """
-        if self.multi is True:
-            self.star, self.data = [], []
+        if self.use_files == True:
+            if self.multi is True:
+                self.star, self.data = [], []
+                for fn in self.file:
+                    s = eleanor.Source(fn=fn, fn_dir=self.directory, tc=True)
+                    if self.do_corr == True or self.do_raw == True:
+                        d = eleanor.TargetData(s)
+                    else:
+                        d = eleanor.TargetData(s, do_psf=True)
+                    self.star.append(s)
+                    self.data.append(d)
+                self.star = np.array(self.star)
+                self.data = np.array(self.data)
+                self.tic    = self.star[0].tic
+                self.coords = self.star[0].coords
 
-            for fn in self.file:
-                s = eleanor.Source(fn=fn, fn_dir=self.directory, tc=True)
-                d = eleanor.TargetData(s)
-                self.star.append(s)
-                self.data.append(d)
-            self.star = np.array(self.star)
-            self.data = np.array(self.data)
-            self.tic    = self.star[0].tic
-            self.coords = self.star[0].coords
+            else:
+                self.star = eleanor.Source(fn=self.file, fn_dir=self.directory, tc=True)
+                if self.do_corr == True or self.do_raw == True:
+                    self.data = eleanor.TargetData(self.star)
+                else:
+                    self.data = eleanor.TargetData(self.star, do_psf=True)
+                self.tic  = self.star.tic
+                self.coords = self.star.coords
 
         else:
-            self.star = eleanor.Source(fn=self.file, fn_dir=self.directory, tc=True)
-            self.data = eleanor.TargetData(self.star)
-            self.tic  = self.star.tic
-            self.coords = self.star.coords
+            if self.multi is True:
+                self.star, self.data = [], []
+                for s in self.star_results:
+                    self.star.append(s)
+                    if self.do_corr == True or self.do_raw == True:
+                        d = eleanor.TargetData(s)
+                    else:
+                        d = eleanor.TargetData(s, do_psf=True)
+                    self.data.append(d)
+
+            else:
+                self.star = self.star_results[0]
+                if self.do_corr == True or self.do_raw == True:
+                    self.data = eleanor.TargetData(self.star)
+                else:
+                    self.data = eleanor.TargetData(self.star, do_psf=True)
 
         return
-
 
     def find_breaks(self, time=None):
         """Finds gaps due to data downlink or other telescope issues.
@@ -101,12 +143,20 @@ class GetLC(object):
             for d in self.data:
                 q = d.quality == 0
                 t = d.time[q]
-                f = d.corr_flux[q]
+                if self.do_corr == True:
+                    f = d.corr_flux[q]
+
+                elif self.do_raw == True:
+                    f = d.raw_flux[q]
+
+                elif self.do_psf == True:
+                    f = d.psf_flux[q]
+
                 err = d.flux_err[q]
 
                 # Searches for breaks based on differences in time array
                 regions = self.find_breaks(time=t)
-                sector_t, sector_f, sector_e, sector_c = normalized_subset(regions, t, f, err, d.ffiindex[q])
+                sector_t, sector_f, sector_e, sector_c = normalized_subset(regions, t, f, err, np.array(d.ffiindex)[q])
                 self.time = np.append(sector_t, self.time)
                 self.norm_flux = np.append(sector_f, self.norm_flux)
                 self.norm_flux_err  = np.append(sector_e, self.norm_flux_err)
@@ -115,10 +165,16 @@ class GetLC(object):
             q = self.data.quality == 0
             regions = self.find_breaks(time=self.data.time[q])
             self.regions = regions+0.0
-            sector_t, sector_f, sector_e, sector_c = normalized_subset(regions, self.data.time[q],
-                                                                       self.data.corr_flux[q],
-                                                                       self.data.flux_err[q],
-                                                                       self.data.ffiindex[q])
+
+            if self.do_corr == True:
+                sector_t, sector_f, sector_e, sector_c = normalized_subset(regions, self.data.time[q], self.data.corr_flux[q], self.data.flux_err[q], np.array(self.data.ffiindex)[q])
+
+            elif self.do_raw == True:
+                sector_t, sector_f, sector_e, sector_c = normalized_subset(regions, self.data.time[q], self.data.raw_flux[q], self.data.flux_err[q], np.array(self.data.ffiindex)[q])
+
+            elif self.do_psf == True:
+                sector_t, sector_f, sector_e, sector_c = normalized_subset(regions, self.data.time[q], self.data.psf_flux[q], self.data.flux_err[q], np.array(self.data.ffiindex)[q])
+
             self.time = sector_t
             self.norm_flux = sector_f
             self.norm_flux_err  = sector_e

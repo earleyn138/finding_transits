@@ -2,8 +2,7 @@ import os
 import sys
 import re
 import glob
-import matplotlib.pyplot as plt
-import numpy as np
+import argparse
 
 def get_tics(lc_dir):
     '''
@@ -42,9 +41,10 @@ def get_tics(lc_dir):
     return all_tics
 
 path = sys.argv[1]
-do_even_odd = 'False'
+lc_type = sys.argv[2] #do_corr, do_psf, or do_raw
+dtype = sys.argv[3] #use_files or use_tics
 lc_dir = path+'lc'
 all_tics = get_tics(lc_dir)
 
 for tic in all_tics:
-    os.system('python short_run.py '+str(tic)+' '+path+' '+do_even_odd)
+    os.system('python short_run.py '+str(tic)+' '+path+' '+' run_all '+lc_type+' '+dtype)

@@ -33,6 +33,7 @@ class CentroidTest(object):
         self.y_cent_trns_list = []
 
         for run in range(len(model['Run'])-1):
+        #run=0
             cents = vetting.CentroidShift(self.time, self.x_cent, self.y_cent, self.path, run)
             self.time_trns_list.append(cents.time_trns)
             self.x_cent_trns_list.append(cents.x_cent_trns)
@@ -82,5 +83,6 @@ class CentroidTest(object):
         #ax3.set_xlim(1440.5, 1441.5)
 
         fig.tight_layout()
+        plt.xlim(1545, 1555)
         plt.show()
         plt.close()

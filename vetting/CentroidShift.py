@@ -25,8 +25,8 @@ class CentroidShift(object):
 
     def load_data(self):
         model = pickle.load(open(self.path, "rb"))
-        self.t0 = model['Planet Solns'][self.run]['t0']
-        self.per = model['Planet Solns'][self.run]['period']
+        self.t0 = model['Planet Solns'][self.run]['t0_1']
+        self.per = model['Planet Solns'][self.run]['period_1']
         self.dur = model['BLS Duration'][self.run]
 
 
