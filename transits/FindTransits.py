@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from operator import itemgetter
 from bls import BLS
 import exoplanet as xo
@@ -12,7 +11,12 @@ class FindTransits(object):
     '''Runs through the box-least-squares method to find transits and
     performs GP modeling'''
 
-    def __init__(self, fig_dir, time, flux, flux_err, cads, tic, run, vet=False, vet_dir ='.', EB=False):
+    def __init__(self, fig_dir, time, flux, flux_err, cads, tic, run, vet=False, vet_dir ='.', EB=False, backend='default'):
+        self.backend = backend
+        if self.backend == 'Agg':
+            import matplotlib
+            matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
 
         self.fig_dir = fig_dir
         self.time = time
@@ -105,6 +109,7 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(-1.1*max_period, 1.1*max_period)
+
         if self.vet == False:
             plt.savefig(fname='{}/fft_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
 
@@ -152,9 +157,11 @@ class FindTransits(object):
         plt.axvline(max_period, color="r", lw=4, alpha=0.3)
         plt.axvline(-max_period, color="r", lw=4, alpha=0.3)
         plt.xlim(neg_low_bound-0.1*max_period, pos_up_bound+0.1*max_period)
+
         if self.vet == False:
             plt.savefig(fname='{}/notch_filter_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
         plt.close()
+
 
         #Inverse fourier transform
         ifft_flux = np.fft.ifft(fft_flux)
@@ -164,8 +171,10 @@ class FindTransits(object):
         plt.plot(pflux)
         plt.xlabel('Cadences')
         plt.ylabel('Detrended Normalized Flux')
+
         if self.vet == False:
             plt.savefig(fname='{}/det_lc_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+
         plt.close()
 
         det_flux = []
@@ -229,8 +238,8 @@ class FindTransits(object):
 
         if self.vet == False:
             plt.savefig(fname='{}/bls_pgram_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
-        plt.close()
 
+        plt.close()
 
     def plot_box(self):
         """
@@ -261,8 +270,10 @@ class FindTransits(object):
         ax.set_xlabel("time since transit [days]")
         ax.set_ylabel("de-trended flux")
 
+
         if self.vet == False:
             plt.savefig(fname='{}/box_plot_tic{:d}_run{:d}'.format(self.fig_dir, self.tic, self.run), dpi=250, format='pdf')
+
         plt.close()
 
 
@@ -380,20 +391,15 @@ class FindTransits(object):
                 omega_2 = xo.distributions.Angle("omega_2")
 
 
-
             # The parameters of the RotationTerm kernel
             logamp = pm.Normal("logamp", mu=np.log(np.var(self.flux[mask])), sd=5.0)
             logrotperiod = pm.Normal("logrotperiod", mu=np.log(rotper), sd=5.0)
-            logQ0 = pm.Normal("logQ0", mu=1.0, sd=10.0) # This is standard
-            ##logQ0 = pm.Normal("logQ0", mu=10.0, sd=1.0)
-            #logQ0 = pm.Normal("logQ0", mu=15.0, sd=1.0)
-            logdeltaQ = pm.Normal("logdeltaQ", mu=2.0, sd=10.0) # This is standard
-            #logdeltaQ = pm.Normal("logdeltaQ", mu=1.0, sd=1.0)
+            logQ0 = pm.Normal("logQ0", mu=1.0, sd=10.0)
+            logdeltaQ = pm.Normal("logdeltaQ", mu=2.0, sd=10.0)
             mix = pm.Uniform("mix", lower=0, upper=1.0)
 
             # Transit jitter & GP parameters
-            logs2 = pm.Normal("logs2", mu=2*np.log(np.min(self.flux_err[mask])), sd=5.0) #This is standard
-            #logs2 = pm.Normal("logs2", mu=2*np.log(np.min(self.flux_err[mask])), sd=0.5)
+            logs2 = pm.Normal("logs2", mu=2*np.log(np.min(self.flux_err[mask])), sd=5.0)
 
             # Track the rotation period as a deterministic
             rotperiod = pm.Deterministic("rotation_period", tt.exp(logrotperiod))

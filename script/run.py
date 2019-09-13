@@ -43,8 +43,9 @@ def get_tics(lc_dir):
 path = sys.argv[1]
 lc_type = sys.argv[2] #do_corr, do_psf, or do_raw
 dtype = sys.argv[3] #use_files or use_tics
+backend = sys.argv[4] #Agg or default
 lc_dir = path+'lc'
 all_tics = get_tics(lc_dir)
 
 for tic in all_tics:
-    os.system('python short_run.py '+str(tic)+' '+path+' '+' run_all '+lc_type+' '+dtype)
+    os.system('python short_run.py '+str(tic)+' '+path+' '+' run_all '+lc_type+' '+dtype+' '+backend)

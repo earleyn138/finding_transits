@@ -2,11 +2,20 @@ import os
 import re
 import sys
 import glob
+import matplotlib
+
+if sys.argv[6] == 'Agg':
+    backend = 'Agg'
+    matplotlib.use('Agg')
+else:
+    backend = 'default'
+
 import matplotlib.pyplot as plt
 import numpy as np
 import exoplanet as xo
 import pickle
 import transits
+
 
 # Relevant TIC
 rel_tic = int(sys.argv[1])
@@ -269,7 +278,7 @@ def get_results(tic, time, norm_flux, norm_flux_err, cads, data_dir, fig_dir, ve
 
     if vet == False and EB == False:
         for i in range(10):
-            results = transits.FindTransits(fig_dir=fig_dir, time=x_values[i], flux=y_values[i], flux_err=yerr_values[i], cads=cad_values[i], tic=tic, run=i)
+            results = transits.FindTransits(fig_dir=fig_dir, time=x_values[i], flux=y_values[i], flux_err=yerr_values[i], cads=cad_values[i], tic=tic, run=i, backend=backend)
 
             planet_results.append(results)
 
@@ -305,7 +314,7 @@ def get_results(tic, time, norm_flux, norm_flux_err, cads, data_dir, fig_dir, ve
     # Even-odd
     elif vet == True and EB == False:
         for i in range(10):
-            results = transits.FindTransits(fig_dir=fig_dir, time=x_values[i], flux=y_values[i], flux_err=yerr_values[i], cads=cad_values[i], tic=tic, run=i, vet=vet, vet_dir=vet_dir)
+            results = transits.FindTransits(fig_dir=fig_dir, time=x_values[i], flux=y_values[i], flux_err=yerr_values[i], cads=cad_values[i], tic=tic, run=i, vet=vet, vet_dir=vet_dir, backend=backend)
 
             planet_results.append(results)
 
@@ -341,7 +350,7 @@ def get_results(tic, time, norm_flux, norm_flux_err, cads, data_dir, fig_dir, ve
 
     elif vet == False and EB == True:
         for i in range(10):
-            results = transits.FindTransits(fig_dir=fig_dir, time=x_values[i], flux=y_values[i], flux_err=yerr_values[i], cads=cad_values[i], tic=tic, run=i, EB=EB)
+            results = transits.FindTransits(fig_dir=fig_dir, time=x_values[i], flux=y_values[i], flux_err=yerr_values[i], cads=cad_values[i], tic=tic, run=i, EB=EB, backend=backend)
 
             planet_results.append(results)
 
